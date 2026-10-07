@@ -1,5 +1,7 @@
 const express = require('express');
 const session = require('express-session');
+const BetterSqlite3Store = require('better-sqlite3-session-store')(session);
+const db = require('./db');
 const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -21,10 +23,14 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Session
 app.use(session({
-    secret: 'dreamstudio_secret_key_2026',
+    store: new BetterSqlite3Store({ client: db }),
+    secret: process.env.SESSION_SECRET || 'dreamstudio_secret_key_2026',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 1 day
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000
+    }
 }));
 
 // Routes
