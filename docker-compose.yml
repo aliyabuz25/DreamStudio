@@ -19,6 +19,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: celalyabuz-ds:latest
+    pull_policy: build
     container_name: celalyabuz-ds
     restart: unless-stopped
     environment:
@@ -50,6 +51,7 @@ services:
       context: .
       dockerfile: Dockerfile.wa
     image: celalyabuz-ds-wa:latest
+    pull_policy: build
     container_name: celalyabuz-ds-wa
     restart: unless-stopped
     volumes:
