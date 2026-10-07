@@ -44,9 +44,8 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=edge"
       - "traefik.http.routers.celalyabuz-ds.rule=Host(`celalyabuz.store`)"
-      - "traefik.http.routers.celalyabuz-ds.entrypoints=websecure"
+      - "traefik.http.routers.celalyabuz-ds.entrypoints=web,websecure"
       - "traefik.http.routers.celalyabuz-ds.tls=true"
-      - "traefik.http.routers.celalyabuz-ds.tls.certresolver=le"
       - "traefik.http.services.celalyabuz-ds.loadbalancer.server.port=3000"
 
   dreamstudio-wa:
