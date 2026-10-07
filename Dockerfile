@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# better-sqlite3 ve bcryptjs için native build araçları
+RUN apk add --no-cache python3 make g++ gcc libc-dev
+
 WORKDIR /app
 
 COPY package*.json ./
