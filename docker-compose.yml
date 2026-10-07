@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 networks:
   proxy:
@@ -22,11 +22,11 @@ services:
     container_name: celalyabuz-ds
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - WA_SERVER_URL=http://celalyabuz-ds-wa:3001
-      - SITE_URL=https://celalyabuz.store
-      - ADMIN_PHONE=${ADMIN_PHONE:-905464233871}
+      NODE_ENV: production
+      PORT: 3000
+      WA_SERVER_URL: http://celalyabuz-ds-wa:3001
+      SITE_URL: https://celalyabuz.store
+      ADMIN_PHONE: ${ADMIN_PHONE:-905464233871}
     volumes:
       - celalyabuz-ds-db:/app/admin/db
       - celalyabuz-ds-uploads:/app/admin/uploads
@@ -38,15 +38,11 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.celalyabuz-ds.rule=Host(`celalyabuz.store`) || Host(`www.celalyabuz.store`)"
+      - "traefik.http.routers.celalyabuz-ds.rule=Host(`celalyabuz.store`)"
       - "traefik.http.routers.celalyabuz-ds.entrypoints=websecure"
       - "traefik.http.routers.celalyabuz-ds.tls=true"
       - "traefik.http.routers.celalyabuz-ds.tls.certresolver=le"
       - "traefik.http.services.celalyabuz-ds.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.celalyabuz\\.store/(.*)"
-      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://celalyabuz.store/$${1}"
-      - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
-      - "traefik.http.routers.celalyabuz-ds.middlewares=www-redirect"
 
   # ── DREAMSTUDIO WHATSAPP ─────────────────────────────
   dreamstudio-wa:
