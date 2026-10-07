@@ -1,0 +1,9 @@
+node_modules/
+admin/auth_info/
+admin/uploads/
+public/uploads/
+*.db
+*.db-shm
+*.db-wal
+.env
+.DS_Store

@@ -1,0 +1,104 @@
+<%- include('layout') %>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card-ds p-4">
+      <div class="section-title">WhatsApp Bağlantı Durumu</div>
+      <div id="statusBadge" class="badge-status s-iptal mb-3" style="font-size:1rem;display:inline-block;">Bağlantı Kontrol Ediliyor...</div>
+      
+      <p style="color:var(--muted);font-size:0.85rem;line-height:1.6;margin-bottom:1.5rem;">
+        Sistemin müşterilerinize anında WhatsApp mesajı gönderebilmesi için telefonunuzu WhatsApp Web gibi sisteme bağlamanız gerekir.
+      </p>
+
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn-accent" onclick="startWa()"><i class="ri-qr-code-line"></i> Bağlan / QR Üret</button>
+        <button class="btn-outline" onclick="checkStatus()"><i class="ri-refresh-line"></i> Durum Yenile</button>
+        <button class="btn-outline" style="border-color:#f87171;color:#f87171;" onclick="disconnectWa()"><i class="ri-logout-box-r-line"></i> Çıkış Yap</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card-ds p-4" style="min-height: 300px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+      <div id="qrContainer" style="text-align:center;">
+        <i class="ri-whatsapp-line" style="font-size:4rem;color:var(--border);"></i>
+        <p style="color:var(--muted);margin-top:1rem;font-size:0.9rem;">Bağlantı durumuna göre QR kodu burada belirecektir.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function checkStatus() {
+  const badge = document.getElementById('statusBadge');
+  const qrBox = document.getElementById('qrContainer');
+  try {
+    const res = await fetch('http://localhost:3001/status');
+    const data = await res.json();
+    
+    if (data.status === 'connected') {
+      badge.className = 'badge-status s-tamamlandi';
+      badge.innerHTML = '<i class="ri-check-line"></i> Bağlı & Aktif';
+      qrBox.innerHTML = '<i class="ri-whatsapp-fill" style="font-size:5rem;color:#34d399;"></i><p style="color:var(--muted);margin-top:1rem;font-size:1rem;">WhatsApp başarıyla bağlandı. Sipariş güncellemeleri otomatik gönderilecek.</p>';
+    } else if (data.status === 'qr') {
+      badge.className = 'badge-status s-inceleniyor';
+      badge.innerHTML = '<i class="ri-qr-code-line"></i> QR Okutmanız Bekleniyor';
+    } else {
+      badge.className = 'badge-status s-iptal';
+      badge.innerHTML = '<i class="ri-close-circle-line"></i> Bağlantı Yok';
+      qrBox.innerHTML = '<i class="ri-whatsapp-line" style="font-size:4rem;color:var(--border);"></i><p style="color:var(--muted);margin-top:1rem;font-size:0.9rem;">Bağlantı bulunamadı. "Bağlan / QR Üret" butonunu kullanın.</p>';
+    }
+  } catch(e) {
+    badge.className = 'badge-status s-iptal';
+    badge.innerHTML = 'Sunucuya Ulaşılamadı (Port 3001 kapalı olabilir)';
+  }
+}
+
+async function startWa() {
+  const badge = document.getElementById('statusBadge');
+  const qrBox = document.getElementById('qrContainer');
+  badge.innerHTML = '<i class="ri-loader-4-line" style="animation:spin 1s linear infinite;display:inline-block;"></i> Başlatılıyor...';
+  
+  try {
+    const res = await fetch('http://localhost:3001/start', { method: 'POST' });
+    const data = await res.json();
+    
+    if (data.status === 'connected') {
+      checkStatus();
+    } else if (data.qr) {
+      badge.className = 'badge-status s-inceleniyor';
+      badge.innerHTML = 'Lütfen Telefonunuzdan QR Kodunu Okutun';
+      qrBox.innerHTML = '<div style="background:#fff;padding:1rem;border-radius:12px;display:inline-block;">' + data.qr + '</div><p style="color:var(--muted);margin-top:1rem;">WhatsApp > Bağlı Cihazlar > Cihaz Ekle</p>';
+      
+      // Auto refresh to check if connected
+      const checkInterval = setInterval(async () => {
+        const sRes = await fetch('http://localhost:3001/status');
+        const sData = await sRes.json();
+        if(sData.status === 'connected') {
+          clearInterval(checkInterval);
+          checkStatus();
+        }
+      }, 2000);
+    }
+  } catch(e) {
+    alert('WhatsApp Sunucusu başlatılamadı.');
+    checkStatus();
+  }
+}
+
+async function disconnectWa() {
+  if(!confirm('Mevcut WhatsApp bağlantısını kesmek istediğinize emin misiniz?')) return;
+  try {
+    await fetch('http://localhost:3001/disconnect', { method: 'POST' });
+    checkStatus();
+  } catch(e) {
+    alert('Hata oluştu');
+  }
+}
+
+// Sayfa yüklenince durumu kontrol et
+document.addEventListener('DOMContentLoaded', checkStatus);
+</script>
+<style>@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
+
+<%- include('layout_end') %>

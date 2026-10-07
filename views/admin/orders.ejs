@@ -1,0 +1,195 @@
+<%- include('layout') %>
+
+<% if (detailOrder) { %>
+<!-- DETAIL VIEW -->
+<div class="mb-4">
+  <a href="/admin/orders" style="color:var(--muted);font-size:0.85rem;text-decoration:none;"><i class="ri-arrow-left-line"></i> Geri Dön</a>
+</div>
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card-ds p-4 mb-4">
+      <div class="section-title">Talep Bilgileri</div>
+      <div style="display:flex;flex-direction:column;gap:0.8rem;">
+        <div><span style="color:var(--muted);font-size:0.8rem;">Takip Kodu</span><br><code style="color:var(--accent);font-size:1.1rem;font-weight:700;"><%= detailOrder.code %></code></div>
+        <div><span style="color:var(--muted);font-size:0.8rem;">Ad Soyad</span><br><span style="font-size:0.95rem;font-weight:500;color:var(--text-dark);"><%= detailOrder.name %></span></div>
+        <div><span style="color:var(--muted);font-size:0.8rem;">Telefon</span><br><a href="tel:<%= detailOrder.phone %>" style="color:var(--text-dark);"><%= detailOrder.phone %></a></div>
+        <% if (detailOrder.email) { %><div><span style="color:var(--muted);font-size:0.8rem;">E-posta</span><br><span style="color:var(--text-dark);"><%= detailOrder.email %></span></div><% } %>
+        <div><span style="color:var(--muted);font-size:0.8rem;">Araç</span><br><span style="color:var(--text-dark);"><%= detailOrder.car %></span></div>
+        <% if (detailOrder.plate) { %><div><span style="color:var(--muted);font-size:0.8rem;">Plaka</span><br><span style="color:var(--text-dark);"><%= detailOrder.plate %></span></div><% } %>
+        <div><span style="color:var(--muted);font-size:0.8rem;">Hizmet</span><br><span style="color:var(--text-dark);"><%= detailOrder.service %></span></div>
+        <div><span style="color:var(--muted);font-size:0.8rem;">Paket</span><br><span style="color:var(--text-dark);"><%= detailOrder.package || '-' %></span></div>
+        <% if (detailOrder.note) { %><div><span style="color:var(--muted);font-size:0.8rem;">Not</span><br><span style="color:rgba(255,255,255,0.7);"><%= detailOrder.note %></span></div><% } %>
+        <div><span style="color:var(--muted);font-size:0.8rem;">Tarih</span><br><span style="color:var(--text-dark);"><%= detailOrder.created_at %></span></div>
+      </div>
+    </div>
+
+    <div class="card-ds p-4">
+      <div class="section-title">Durum Güncelle</div>
+      <select id="statusSel" class="form-select mb-3">
+        <% ['odeme_bekliyor','beklemede','inceleniyor','tamamlandi','iptal'].forEach(s => { 
+            let label = s === 'odeme_bekliyor' ? 'Ödeme Bekleniyor' : s === 'beklemede' ? 'Onay Bekliyor' : s === 'inceleniyor' ? 'İşlemde/Tasarımda' : s === 'tamamlandi' ? 'Tamamlandı' : 'İptal Edildi';
+        %>
+        <option value="<%= s %>" <%= detailOrder.status === s ? 'selected' : '' %>><%= label %></option>
+        <% }); %>
+      </select>
+      <button class="btn-outline w-100" onclick="updateStatus(<%= detailOrder.id %>)">Durumu Güncelle & WA Mesajı Gönder</button>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card-ds p-4 mb-4">
+      <div class="section-title">Özel Tasarım / Görsel Yükle</div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Ödeme alındıktan sonra tasarladığınız özel araç görsellerini buradan müşteriye iletebilirsiniz. "İlet" dediğinizde sipariş durumu "Tamamlandı" yapılır ve müşteriye WhatsApp'tan bildirim gider.</p>
+      
+      <textarea id="replyText" class="form-control mb-3" rows="4" placeholder="Müşteriye notunuz veya tasarım detayları..."><%= detailOrder.reply || '' %></textarea>
+      
+      <div class="mb-3">
+        <label style="color:var(--muted);font-size:0.8rem;margin-bottom:0.4rem;display:block;">Tasarım / Görsel (Zorunlu değil)</label>
+        <input type="file" id="replyImg" class="form-control" accept="image/*">
+        <% if (detailOrder.reply_image) { %>
+          <div class="mt-2" style="font-size:0.8rem;color:var(--muted);">Mevcut Görsel: <a href="/uploads/<%= detailOrder.reply_image %>" target="_blank" style="color:var(--accent)">İncele</a></div>
+        <% } %>
+      </div>
+
+      <button class="btn-accent" style="width: 100%" onclick="sendReply(<%= detailOrder.id %>)"><i class="ri-check-double-line"></i> Tasarımı Müşteriye İlet & İşlemi Kapat</button>
+    </div>
+
+    <!-- Müşteri Fotoğrafları -->
+    <div class="card-ds p-4">
+      <div class="section-title">Müşterinin Yüklediği Fotoğraflar</div>
+      <% 
+        if (typeof photos !== 'undefined' && photos && photos.length > 0) { 
+      %>
+        <div class="row g-2">
+          <% photos.forEach(p => { %>
+            <div class="col-6 col-md-4">
+              <a href="/uploads/<%= p.filename %>" target="_blank" style="display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+                <img src="/uploads/<%= p.filename %>" style="width:100%;height:100%;object-fit:cover;">
+              </a>
+              <div style="font-size:0.75rem;color:var(--muted);text-align:center;margin-top:0.4rem;text-transform:uppercase;"><%= p.type.replace('ph-','') %></div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <p style="color:var(--muted);font-size:0.85rem;margin:0;">Sisteme fotoğraf yüklenmemiş.</p>
+      <% } %>
+    </div>
+
+  </div>
+</div>
+
+<script>
+async function updateStatus(id) {
+  const status = document.getElementById('statusSel').value;
+  if(!confirm('Durumu güncelliyorsunuz. Bu işlem müşteriye WhatsApp bildirimi gönderebilir. Onaylıyor musunuz?')) return;
+  const btn = event.target;
+  const oldtxt = btn.innerText;
+  btn.innerText = 'Bekleyiniz...'; btn.disabled = true;
+  try {
+    const r = await fetch('/admin/orders', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'update_status', id, status })
+    });
+    const d = await r.json();
+    if (d.ok) { alert('Başarıyla güncellendi.'); location.reload(); }
+  } catch(e) {
+    alert('Hata');
+  } finally {
+    btn.innerText = oldtxt; btn.disabled = false;
+  }
+}
+
+async function sendReply(id) {
+  const text = document.getElementById('replyText').value.trim();
+  const file = document.getElementById('replyImg').files[0];
+  if (!text && !file) return alert('Lütfen bir mesaj veya görsel seçin');
+  if(!confirm('Tasarım müşteriye iletilecek ve WhatsApp üzerinden bilgi verilecektir. İşlemi onaylıyor musunuz?')) return;
+  
+  const fd = new FormData();
+  fd.append('id', id);
+  fd.append('reply', text);
+  if (file) fd.append('image', file);
+
+  const btn = event.target;
+  const oldTxt = btn.innerHTML;
+  btn.innerHTML = '<i class="ri-loader-4-line" style="animation:spin 1s linear infinite;display:inline-block;"></i> Yükleniyor...'; 
+  btn.disabled = true;
+
+  try {
+    const r = await fetch('/admin/api/reply', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (d.ok) { alert('Müşteriye bilgi verildi ve sipariş kapatıldı.'); location.reload(); }
+    else alert('Hata: ' + d.error);
+  } catch(e) {
+    alert('Hata');
+  } finally {
+    btn.innerHTML = oldTxt; btn.disabled = false;
+  }
+}
+</script>
+
+<% } else { %>
+<!-- LIST VIEW (DATATABLES) -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h2 style="font-size:1.4rem;font-weight:600;margin:0;color:var(--text-dark);">Gelen Talepler</h2>
+</div>
+
+<div class="card-ds overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle" id="ordersTable" style="width:100%">
+      <thead>
+        <tr>
+          <th>Takip Kodu</th>
+          <th>Tarih</th>
+          <th>Müşteri Bilgileri</th>
+          <th>Araç</th>
+          <th>Hizmet / Paket</th>
+          <th>Durum</th>
+          <th class="text-end">İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach(o => { 
+           let badgeClass = o.status === 'tamamlandi' ? 's-tamamlandi' : o.status === 'inceleniyor' ? 's-inceleniyor' : o.status === 'iptal' ? 's-iptal' : o.status === 'odeme_bekliyor' ? 's-odeme_bekliyor' : 's-beklemede';
+           let label = o.status === 'odeme_bekliyor' ? 'Ödeme Bekleniyor' : o.status === 'beklemede' ? 'Onay Bekliyor' : o.status === 'inceleniyor' ? 'Tasarımda' : o.status === 'tamamlandi' ? 'Tamamlandı' : 'İptal Edildi';
+        %>
+        <tr>
+          <td><code style="color:var(--accent);font-weight:700;font-size:1rem;"><%= o.code %></code></td>
+          <td style="color:var(--muted);"><%= o.created_at.split(' ')[0] %></td>
+          <td>
+            <div style="font-weight:600;color:var(--text-dark); margin-bottom:0.2rem;"><%= o.name %></div>
+            <div style="font-size:0.8rem;color:var(--muted);"><%= o.phone %></div>
+          </td>
+          <td style="font-size:0.9rem;"><%= o.car %></td>
+          <td style="font-size:0.9rem;color:var(--muted);"><%= o.service %><br><span style="font-size:0.75rem;"><%= o.package %></span></td>
+          <td><span class="badge-status <%= badgeClass %>"><%= label %></span></td>
+          <td class="text-end">
+            <a href="/admin/orders?id=<%= o.id %>" class="btn-outline" style="padding:0.4rem 0.8rem;font-size:0.8rem;white-space:nowrap;">Yönet <i class="ri-arrow-right-s-line"></i></a>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+      $('#ordersTable').DataTable({
+          language: {
+              url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json'
+          },
+          order: [[1, 'desc']],
+          pageLength: 25,
+          responsive: true
+      });
+  });
+</script>
+<% } %>
+
+<%- include('layout_end') %>

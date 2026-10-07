@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teklif Al - DreamStudio</title>
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- IntlTelInput -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@19.2.16/build/css/intlTelInput.css">
+  
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --accent: #000000;
+      --muted: rgba(0,0,0,0.5);
+      --border: rgba(0,0,0,0.1);
+      --input-bg: #fafafa;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navbar */
+    .navbar {
+      padding: 1.5rem 2rem 0;
+      background: transparent;
+      border: none;
+    }
+    .navbar-brand { display: flex; align-items: center; font-size: 1.25rem; font-weight: 500; color: var(--text) !important; text-decoration: none; letter-spacing: -0.02em; }
+    .navbar-brand img { height: 32px; margin-right: 12px; filter: invert(1); }
+
+    /* Form Container */
+    .teklif-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 5vw 2rem;
+    }
+    
+    .teklif-box {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    h2 { color: var(--text); font-weight: 500; font-size: clamp(1.8rem, 4vw, 2.2rem); margin-bottom: 0.2rem; letter-spacing: -0.03em; text-align: center; }
+    .sub { color: var(--muted); font-size: 1rem; font-weight: 300; margin-bottom: 2rem; text-align: center; letter-spacing: -0.01em; }
+
+    /* Progress Steps */
+    .order-steps { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .order-step-dot { width: 8px; height: 8px; border-radius: 50%; background: #e0e0e0; transition: all 0.5s ease; }
+    .order-step-dot.active { background: var(--text); transform: scale(1.5); box-shadow: 0 0 12px rgba(0,0,0,0.1); }
+    .order-step-dot.done { background: #b0b0b0; }
+
+    /* Panels */
+    .order-panel { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .order-panel.active { display: block; opacity: 1; transform: translateY(0); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .order-panel h4 { color: var(--text); font-weight: 500; font-size: 1.3rem; margin-bottom: 0.1rem; letter-spacing: -0.02em; }
+    .step-sub { color: var(--muted); font-size: 0.85rem; font-weight: 400; margin-bottom: 1rem; line-height: 1.4; }
+    
+    /* Inputs */
+    .form-control { 
+      background: var(--input-bg) !important; 
+      border: 1px solid #e5e5e5 !important; 
+      color: var(--text) !important; 
+      border-radius: 12px; 
+      padding: 0.9rem 1.2rem; 
+      font-size: 1rem; 
+      font-weight: 400; 
+      transition: all 0.3s ease; 
+      letter-spacing: -0.01em;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+    }
+    .form-control:focus { 
+      border-color: #000 !important; 
+      box-shadow: 0 0 0 4px rgba(0,0,0,0.05) !important; 
+      background: #fff !important; 
+    }
+    .form-control::placeholder { color: #aaa; font-weight: 300; }
+
+    /* Select Inputs */
+    select.form-control { 
+      appearance: none; -webkit-appearance: none; 
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important; 
+      background-repeat: no-repeat !important; 
+      background-position: right 1rem center !important; 
+      background-size: 12px !important; 
+      padding-right: 2.5rem; 
+      cursor: pointer; 
+    }
+    select.form-control option { background: #ffffff; color: #000; padding: 1rem; }
+    select.form-control:disabled { opacity: 0.5; cursor: not-allowed; background: #f0f0f0 !important; }
+
+    /* IntlTelInput Customization */
+    .iti { width: 100%; display: block; margin-bottom: 0.5rem; }
+    .iti__country-list { 
+      background: #ffffff; 
+      border: 1px solid #e5e5e5; 
+      border-radius: 12px; 
+      color: var(--text); 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+      font-weight: 400; 
+      z-index: 9999;
+      margin-top: 5px;
+      scrollbar-width: thin;
+      scrollbar-color: #ddd transparent;
+      text-align: left;
+    }
+    .iti__country-list::-webkit-scrollbar { width: 6px; }
+    .iti__country-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+    .iti__country { padding: 10px 15px; transition: background 0.2s ease; }
+    .iti__country:hover { background: #f5f5f5; }
+    .iti__country.iti__highlight { background: #f0f0f0; color: var(--text); }
+    .iti__divider { border-bottom-color: #eee; }
+    .iti__dial-code { color: #888; margin-left: 6px; }
+    .iti__selected-flag { padding: 0 1rem 0 1.2rem; background: transparent !important; }
+    .iti__arrow { border-top-color: #666; }
+    .iti__arrow--up { border-bottom-color: #666; border-top-color: transparent; }
+    .iti__search-input { 
+      background: #f9f9f9; 
+      border: 1px solid #e5e5e5; 
+      color: var(--text); 
+      border-radius: 8px; 
+      padding: 0.6rem; 
+      margin: 0.5rem; 
+      width: calc(100% - 1rem); 
+    }
+    
+    .error-text { color: #d32f2f; font-size: 0.85rem; font-weight: 500; margin-top: 0.6rem; display: none; }
+    .is-invalid { border-color: #d32f2f !important; box-shadow: 0 0 0 4px rgba(211,47,47,0.1) !important; }
+
+/* Buttons */
+    .step-btns { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .btn-red { background: var(--text); color: var(--bg); border: none; padding: 1rem 2rem; border-radius: 50px; font-size: 1rem; font-weight: 500; text-decoration: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); flex: 1; text-align: center; cursor: pointer; letter-spacing: -0.01em; }
+    .btn-red:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    .btn-red:disabled { opacity: 0.7; cursor: wait; transform: none; box-shadow: none; }
+    
+    .btn-ghost { background: transparent; border: 1px solid #d0d0d0; color: var(--text); padding: 1rem 2rem; border-radius: 50px; font-size: 1rem; font-weight: 500; text-decoration: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); flex: 1; text-align: center; cursor: pointer; letter-spacing: -0.01em; }
+    .btn-ghost:hover { border-color: #aaa; background: #f8f8f8; }
+
+    /* Service Options */
+    .service-opts { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem !important; }
+    .service-opt { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; background: var(--input-bg); border: 1px solid #e5e5e5; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .service-opt:hover { border-color: #ccc; background: #fdfdfd; }
+    .service-opt:has(input:checked) { border-color: #000; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .service-opt input { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+    .service-opt input:checked { border-color: #000; }
+    .service-opt input:checked::after { content:''; width: 8px; height: 8px; background: #000; border-radius: 50%; }
+    .service-opt span { color: #444; font-size: 0.95rem; font-weight: 400; transition: color 0.3s ease; letter-spacing: -0.01em; }
+    .service-opt:has(input:checked) span { color: #000; font-weight: 500; }
+
+    /* Photo Upload */
+    .photo-upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+    @media(min-width:576px) { .photo-upload-grid { grid-template-columns: repeat(4, 1fr); gap: 1rem; } }
+    
+    .photo-slot { 
+      aspect-ratio: 1; 
+      border: 2px dashed #e0e0e0; 
+      border-radius: 12px; 
+      cursor: pointer; 
+      overflow: hidden; 
+      position: relative; 
+      background: #fafafa;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .photo-slot:hover { 
+      border-color: #aaa; 
+      background: #fff; 
+      transform: translateY(-2px); 
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .photo-slot.has-photo { border-style: solid; border-color: #e5e5e5; }
+    
+    .photo-slot-inner { 
+      width: 100%; height: 100%; 
+      display: flex; flex-direction: column; 
+      align-items: center; justify-content: center; 
+      gap: 0.5rem; 
+      color: #888; 
+      font-size: 0.85rem; 
+      font-weight: 500; 
+      pointer-events: none; 
+      transition: color 0.3s ease; 
+    }
+    .photo-slot:hover .photo-slot-inner { color: #333; }
+    .photo-slot-inner i { font-size: 1.6rem; color: #bbb; transition: color 0.3s ease; }
+    .photo-slot:hover .photo-slot-inner i { color: #666; }
+    
+    .photo-slot-preview { 
+      position: absolute; inset: 0; 
+      object-fit: cover; width: 100%; height: 100%; 
+      border-radius: 12px; 
+      transition: transform 0.4s ease;
+    }
+    .photo-slot.has-photo:hover .photo-slot-preview { transform: scale(1.05); }
+    
+    .photo-slot-check { 
+      position: absolute; top: 6px; right: 6px; 
+      width: 22px; height: 22px; 
+      background: #000; border-radius: 50%; 
+      display: flex; align-items: center; justify-content: center; 
+      font-size: 0.75rem; color: #fff; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+    }
+    
+    .extra-slot { grid-column: span 1; }
+    .upload-hint { font-size: 0.85rem; color: #888; text-align: center; margin-top: 1rem; font-weight: 400; }
+
+    /* Tracking */
+    .tracking-box { border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 2rem 0; text-align: center; margin-bottom: 1.5rem; }
+    .tracking-label { font-size: 0.8rem; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.8rem; font-weight: 500; }
+    .tracking-code { font-size: 2.8rem; font-weight: 300; color: #000; letter-spacing: 6px; margin-bottom: 1.5rem; line-height:1; }
+    .copy-btn { background: #fff; border: 1px solid #ddd; color: #000; border-radius: 50px; padding: 0.8rem 2rem; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { border-color: #000; background: #fafafa; }
+    .tracking-link-box { text-align: center; margin-top:1.5rem; }
+    .tracking-link-box a { color: #000; text-decoration: none; font-weight: 500; font-size: 1rem; transition: opacity 0.3s; border-bottom: 1px solid #000; padding-bottom: 2px; }
+    .tracking-link-box a:hover { opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container">
+    <a class="navbar-brand mx-auto" href="/">
+      <img src="/test.png" alt="DreamStudio">
+    </a>
+  </div>
+</nav>
+
+<div class="teklif-wrapper">
+  <div class="teklif-box">
+    <h2>Teklif Al</h2>
+    <p class="sub">Birkaç adımda aracınız için özel teklif alın.</p>
+
+    <div class="order-steps">
+      <div class="order-step-dot active" id="step-dot-1"></div>
+      <div class="order-step-dot" id="step-dot-2"></div>
+      <div class="order-step-dot" id="step-dot-3"></div>
+      <div class="order-step-dot" id="step-dot-4"></div>
+      <div class="order-step-dot" id="step-dot-5"></div>
+    </div>
+
+    <form id="orderForm" enctype="multipart/form-data">
+      
+      <!-- ADIM 1 -->
+      <div class="order-panel active" id="panel-1">
+        <h4>İletişim Bilgileriniz</h4>
+        <p class="step-sub">Sizi arayabilmemiz için iletişim bilgilerinizi giriniz.</p>
+        <div class="mb-3">
+          <input type="text" class="form-control" id="f-name" placeholder="Adınız Soyadınız" required>
+          <div class="error-text" id="err-name">Lütfen adınızı giriniz.</div>
+        </div>
+        <div>
+          <input type="tel" class="form-control" id="f-phone" required>
+          <div class="error-text" id="err-phone">Geçerli bir telefon numarası giriniz.</div>
+        </div>
+        <div class="mb-4 mt-3">
+          <input type="email" class="form-control" id="f-email" placeholder="E-posta (Opsiyonel)">
+        </div>
+        <button type="button" class="btn-red" style="width:100%" onclick="validateStep(1)">İleri <i class="bi bi-arrow-right ms-2"></i></button>
+      </div>
+
+      <!-- ADIM 2 -->
+      <div class="order-panel" id="panel-2">
+        <h4>Araç Bilgileri</h4>
+        <p class="step-sub">Hangi araç için işlem yapılacağını belirtiniz.</p>
+        
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <select class="form-control" id="f-year" required>
+              <option value="" disabled selected>Yıl Seçiniz</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-control" id="f-make" required disabled>
+              <option value="" disabled selected>Marka Seçiniz</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-control" id="f-model" required disabled>
+              <option value="" disabled selected>Model Seçiniz</option>
+            </select>
+          </div>
+        </div>
+        <div class="error-text" id="err-car" style="margin-bottom:1rem;">Lütfen araç yıl, marka ve modelini seçiniz.</div>
+
+        <div class="mb-4">
+          <input type="text" class="form-control" id="f-plate" placeholder="Plaka (Opsiyonel)">
+        </div>
+        <div class="step-btns">
+          <button type="button" class="btn-ghost" onclick="nextStep(1)"><i class="bi bi-arrow-left me-2"></i> Geri</button>
+          <button type="button" class="btn-red" onclick="validateStep(2)">İleri <i class="bi bi-arrow-right ms-2"></i></button>
+        </div>
+      </div>
+
+      <!-- ADIM 3 -->
+      <div class="order-panel" id="panel-3">
+        <h4>Araç Fotoğrafları</h4>
+        <p class="step-sub">Aracınızın mevcut durumunu görmek fiyatlandırmayı hızlandırır.</p>
+        <div class="photo-upload-grid" id="photoGrid">
+          <% const angles = [
+            {id:'ph-front', icon:'camera', label:'Ön'},
+            {id:'ph-back',  icon:'camera', label:'Arka'},
+            {id:'ph-left',  icon:'camera', label:'Sol'},
+            {id:'ph-right', icon:'camera', label:'Sağ'},
+          ];
+          angles.forEach(a => { %>
+            <label class="photo-slot" id="slot-<%= a.id %>">
+              <input type="file" accept="image/*" id="<%= a.id %>" name="<%= a.id %>" onchange="previewPhoto('<%= a.id %>')" style="display:none">
+              <div class="photo-slot-inner" id="inner-<%= a.id %>">
+                <i class="bi bi-<%= a.icon %>"></i>
+                <span><%= a.label %></span>
+              </div>
+            </label>
+          <% }); %>
+          <label class="photo-slot extra-slot">
+            <input type="file" accept="image/*" multiple id="ph-extra" onchange="previewExtras()" style="display:none">
+            <div class="photo-slot-inner">
+              <i class="bi bi-plus-lg"></i>
+              <span>Ekstra</span>
+            </div>
+          </label>
+        </div>
+        <div class="upload-hint">En az 4 açıdan fotoğraf eklemeniz önerilir.</div>
+        <div class="step-btns mt-4">
+          <button type="button" class="btn-ghost" onclick="nextStep(2)"><i class="bi bi-arrow-left me-2"></i> Geri</button>
+          <button type="button" class="btn-red" onclick="nextStep(4)">İleri <i class="bi bi-arrow-right ms-2"></i></button>
+        </div>
+      </div>
+
+      <!-- ADIM 4 -->
+      <div class="order-panel" id="panel-4">
+        <h4>Hizmet Seçimi</h4>
+        <p class="step-sub">Aracınız için hangi işlemleri düşünüyorsunuz?</p>
+        <div id="err-hizmet" class="error-text mb-3 text-center">Lütfen en az bir hizmet seçiniz.</div>
+        <div class="service-opts mb-4">
+          <% const opts = ['Karbon Fiber Kaplama','Plastik 3D İşleme','Bodykit Takımı','Fiber Kit Üretimi','Özel Tasarım'];
+          opts.forEach(opt => { %>
+            <label class="service-opt">
+              <input type="radio" name="hizmet" value="<%= opt %>">
+              <span><%= opt %></span>
+            </label>
+          <% }); %>
+        </div>
+        <div class="mb-4">
+          <textarea class="form-control" id="f-note" rows="3" placeholder="Eklemek istedikleriniz..."></textarea>
+        </div>
+        <div class="step-btns">
+          <button type="button" class="btn-ghost" onclick="nextStep(3)"><i class="bi bi-arrow-left me-2"></i> Geri</button>
+          <button type="button" class="btn-red" onclick="validateStep(4)"><i class="bi bi-check2-circle me-2"></i> Talebi Gönder</button>
+        </div>
+      </div>
+
+      <!-- ADIM 5 -->
+      <div class="order-panel" id="panel-5">
+        <div style="text-align:center;margin-bottom:3rem;">
+          <div style="width:80px;height:80px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+            <i class="bi bi-check-lg" style="font-size:2.5rem;color:#000;"></i>
+          </div>
+          <h4 style="font-size:1.8rem;font-weight:400;margin-bottom:0.5rem;letter-spacing:-0.02em;">Talebiniz Alındı</h4>
+          <p style="color:var(--muted);font-weight:300;font-size:1.05rem;">En kısa sürede sizinle iletişime geçeceğiz.</p>
+        </div>
+        
+        <div class="tracking-box">
+          <div class="tracking-label">Sipariş Takip Kodu</div>
+          <div class="tracking-code" id="trackingCode"></div>
+          <button type="button" class="copy-btn" onclick="copyCode()">Kodu Kopyala</button>
+        </div>
+        
+        <div class="tracking-link-box">
+          <a id="trackingLink" href="#" target="_blank">Takip Sayfasına Git <i class="bi bi-arrow-up-right ms-1"></i></a>
+        </div>
+        
+        <div style="text-align:center;margin-top:3rem;">
+          <a href="/" style="color:var(--muted);text-decoration:none;font-size:0.95rem;transition:color 0.3s;border-bottom:1px solid transparent;padding-bottom:2px;" onmouseover="this.style.color='#000';this.style.borderColor='#000'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='transparent'">Ana Sayfaya Dön</a>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@19.2.16/build/js/intlTelInput.min.js"></script>
+<script>
+  let currentStep = 1;
+  const TOTAL_STEPS = 5;
+  let uploadedPhotos = {};
+  
+  const phoneInput = window.intlTelInput(document.querySelector("#f-phone"), {
+    initialCountry: "tr",
+    preferredCountries: ["tr", "de", "gb", "us"],
+    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@19.2.16/build/js/utils.js",
+    separateDialCode: true,
+    customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
+      return "Örn: " + selectedCountryPlaceholder;
+    },
+  });
+
+  // --- Araç Seçim Mantığı ---
+  const elYear = document.getElementById('f-year');
+  const elMake = document.getElementById('f-make');
+  const elModel = document.getElementById('f-model');
+
+  const currentYear = new Date().getFullYear();
+  for (let i = currentYear; i >= 1990; i--) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i;
+    elYear.appendChild(opt);
+  }
+
+  elYear.addEventListener('change', async () => {
+    const year = elYear.value;
+    elMake.innerHTML = '<option value="" disabled selected>Yükleniyor...</option>';
+    elMake.disabled = true;
+    elModel.innerHTML = '<option value="" disabled selected>Model Seçiniz</option>';
+    elModel.disabled = true;
+    
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json`);
+      const data = await res.json();
+      elMake.innerHTML = '<option value="" disabled selected>Marka Seçiniz</option>';
+      
+      const sortedMakes = data.Results.sort((a,b) => a.MakeName.localeCompare(b.MakeName));
+      
+      sortedMakes.forEach(make => {
+        const opt = document.createElement('option');
+        opt.value = make.MakeName;
+        opt.textContent = make.MakeName;
+        elMake.appendChild(opt);
+      });
+      elMake.disabled = false;
+    } catch (e) {
+      elMake.innerHTML = '<option value="" disabled selected>Hata oluştu</option>';
+      console.error(e);
+    }
+  });
+
+  elMake.addEventListener('change', async () => {
+    const make = elMake.value;
+    const year = elYear.value;
+    elModel.innerHTML = '<option value="" disabled selected>Yükleniyor...</option>';
+    elModel.disabled = true;
+
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`);
+      const data = await res.json();
+      
+      elModel.innerHTML = '<option value="" disabled selected>Model Seçiniz</option>';
+      
+      if (data.Results.length === 0) {
+        elModel.innerHTML = '<option value="" disabled>Model bulunamadı (Tümü)</option>';
+        const opt = document.createElement('option');
+        opt.value = 'Diğer / Bulunamadı';
+        opt.textContent = 'Diğer / Bulunamadı';
+        elModel.appendChild(opt);
+      } else {
+        const sortedModels = data.Results.sort((a,b) => a.Model_Name.localeCompare(b.Model_Name));
+        sortedModels.forEach(model => {
+          const opt = document.createElement('option');
+          opt.value = model.Model_Name;
+          opt.textContent = model.Model_Name;
+          elModel.appendChild(opt);
+        });
+      }
+      elModel.disabled = false;
+    } catch (e) {
+      elModel.innerHTML = '<option value="" disabled selected>Hata oluştu</option>';
+      console.error(e);
+    }
+  });
+  // -------------------------
+
+  function validateStep(step) {
+    if (step === 1) {
+      const name = document.getElementById('f-name');
+      const phone = document.getElementById('f-phone');
+      let valid = true;
+      if (!name.value.trim()) { name.classList.add('is-invalid'); document.getElementById('err-name').style.display = 'block'; valid = false; }
+      else { name.classList.remove('is-invalid'); document.getElementById('err-name').style.display = 'none'; }
+      
+      if (!phoneInput.isValidNumber()) { phone.classList.add('is-invalid'); document.getElementById('err-phone').style.display = 'block'; valid = false; }
+      else { phone.classList.remove('is-invalid'); document.getElementById('err-phone').style.display = 'none'; }
+      if (valid) nextStep(2);
+    }
+    if (step === 2) {
+      const year = document.getElementById('f-year').value;
+      const make = document.getElementById('f-make').value;
+      const model = document.getElementById('f-model').value;
+      
+      const errCar = document.getElementById('err-car');
+      const yEl = document.getElementById('f-year');
+      const mkEl = document.getElementById('f-make');
+      const mdEl = document.getElementById('f-model');
+
+      if (!year || !make || !model) { 
+        errCar.style.display = 'block';
+        if (!year) yEl.classList.add('is-invalid'); else yEl.classList.remove('is-invalid');
+        if (!make) mkEl.classList.add('is-invalid'); else mkEl.classList.remove('is-invalid');
+        if (!model) mdEl.classList.add('is-invalid'); else mdEl.classList.remove('is-invalid');
+      } else { 
+        errCar.style.display = 'none';
+        yEl.classList.remove('is-invalid');
+        mkEl.classList.remove('is-invalid');
+        mdEl.classList.remove('is-invalid');
+        nextStep(3); 
+      }
+    }
+    if (step === 4) {
+      const hizmet = document.querySelector('input[name="hizmet"]:checked');
+      if (!hizmet) { document.getElementById('err-hizmet').style.display = 'block'; }
+      else { document.getElementById('err-hizmet').style.display = 'none'; submitForm(); }
+    }
+  }
+
+  function nextStep(step) {
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const panel = document.getElementById('panel-' + i);
+      const dot   = document.getElementById('step-dot-' + i);
+      if (panel) panel.classList.toggle('active', i === step);
+      if (dot) {
+        dot.classList.remove('active','done');
+        if (i === step) dot.classList.add('active');
+        else if (i < step) dot.classList.add('done');
+      }
+    }
+    currentStep = step;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function submitForm() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('f-name').value || '');
+    formData.append('phone', phoneInput.getNumber() || '');
+    formData.append('email', document.getElementById('f-email').value || '');
+    
+    const year = document.getElementById('f-year').value;
+    const make = document.getElementById('f-make').value;
+    const model = document.getElementById('f-model').value;
+    formData.append('car', `${year} ${make} ${model}`);
+    
+    formData.append('plate', document.getElementById('f-plate').value || '');
+    
+    const hizmet = document.querySelector('input[name="hizmet"]:checked');
+    formData.append('service', hizmet ? hizmet.value : '');
+    formData.append('note', document.getElementById('f-note').value || '');
+
+    Object.keys(uploadedPhotos).forEach(key => formData.append(key, uploadedPhotos[key]));
+
+    const btn = document.querySelector('#panel-4 .btn-red');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Gönderiliyor...';
+    btn.disabled = true;
+
+    fetch('/api/order', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('trackingCode').textContent = data.code;
+        const trackUrl = location.origin + '/track?code=' + data.code;
+        const link = document.getElementById('trackingLink');
+        link.href = trackUrl;
+        nextStep(5);
+      } else {
+        alert('Hata: ' + data.error);
+      }
+    })
+    .catch(err => alert('Bir hata oluştu'))
+    .finally(() => {
+      btn.innerHTML = oldText;
+      btn.disabled = false;
+    });
+  }
+
+  function previewPhoto(id) {
+    const input = document.getElementById(id);
+    const slot = document.getElementById('slot-' + id);
+    const inner = document.getElementById('inner-' + id);
+    if (!input.files[0]) return;
+    const url = URL.createObjectURL(input.files[0]);
+    uploadedPhotos[id] = input.files[0];
+    inner.innerHTML = `<img src="${url}" class="photo-slot-preview"><div class="photo-slot-check"><i class="bi bi-check-lg"></i></div>`;
+    slot.classList.add('has-photo');
+  }
+
+  function previewExtras() {
+    const input = document.getElementById('ph-extra');
+    Array.from(input.files).forEach((f,i) => { uploadedPhotos['extra-'+i] = f; });
+    const slot = document.querySelector('.extra-slot');
+    slot.style.borderColor = '#000';
+  }
+
+  function copyCode() {
+    const code = document.getElementById('trackingCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.innerHTML = 'Kopyalandı <i class="bi bi-check-lg ms-1"></i>';
+      setTimeout(() => { btn.innerHTML = 'Kodu Kopyala'; }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

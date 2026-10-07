@@ -1,0 +1,161 @@
+<%- include('layout') %>
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="section-title mb-0">Kullanıcı Listesi</div>
+  <button class="btn-accent" onclick="document.getElementById('modalAdd').style.display='flex'">
+    <i class="ri-user-add-line"></i> Kullanıcı Ekle
+  </button>
+</div>
+
+<div class="card-ds">
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Kullanıcı Adı</th>
+          <th>Kayıt Tarihi</th>
+          <th>Durum</th>
+          <th style="text-align:right;">İşlemler</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(u => { %>
+        <tr>
+          <td><%= u.id %></td>
+          <td><strong><%= u.username %></strong></td>
+          <td><%= u.created_at ? new Date(u.created_at).toLocaleDateString('tr-TR', {day:'numeric',month:'short',year:'numeric'}) : '-' %></td>
+          <td>
+            <% if (u.id === currentUser) { %>
+              <span class="badge-status s-tamamlandi">Aktif (Sen)</span>
+            <% } else { %>
+              <span class="badge-status s-inceleniyor">Kullanıcı</span>
+            <% } %>
+          </td>
+          <td style="text-align:right;">
+            <button class="btn-outline" style="padding:0.4rem 0.8rem;font-size:0.82rem;"
+              onclick="openEditModal(<%= u.id %>, '<%= u.username %>')">
+              <i class="ri-lock-password-line"></i> Şifre Değiştir
+            </button>
+            <% if (u.id !== currentUser) { %>
+            <button class="btn-outline" style="padding:0.4rem 0.8rem;font-size:0.82rem;color:#dc2626;border-color:#fca5a5;margin-left:0.4rem;"
+              onclick="deleteUser(<%= u.id %>, '<%= u.username %>')">
+              <i class="ri-delete-bin-line"></i> Sil
+            </button>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (users.length === 0) { %>
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem!important;">Henüz kullanıcı yok.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Kullanıcı Ekle -->
+<div id="modalAdd" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;align-items:center;justify-content:center;">
+  <div class="card-ds" style="width:100%;max-width:420px;padding:2rem;position:relative;">
+    <button onclick="document.getElementById('modalAdd').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);">
+      <i class="ri-close-line"></i>
+    </button>
+    <h5 style="font-weight:700;margin-bottom:1.5rem;color:var(--text-dark);">Yeni Kullanıcı Ekle</h5>
+    <div class="mb-3">
+      <label class="form-label">Kullanıcı Adı</label>
+      <input type="text" id="addUsername" class="form-control" placeholder="kullanici_adi">
+    </div>
+    <div class="mb-4">
+      <label class="form-label">Şifre (min. 6 karakter)</label>
+      <input type="password" id="addPassword" class="form-control" placeholder="••••••">
+    </div>
+    <div id="addError" style="color:#dc2626;font-size:0.87rem;margin-bottom:1rem;display:none;"></div>
+    <div style="display:flex;gap:0.8rem;justify-content:flex-end;">
+      <button class="btn-outline" onclick="document.getElementById('modalAdd').style.display='none'">İptal</button>
+      <button class="btn-accent" onclick="submitAdd()"><i class="ri-check-line"></i> Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Şifre Değiştir -->
+<div id="modalEdit" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;align-items:center;justify-content:center;">
+  <div class="card-ds" style="width:100%;max-width:420px;padding:2rem;position:relative;">
+    <button onclick="document.getElementById('modalEdit').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);">
+      <i class="ri-close-line"></i>
+    </button>
+    <h5 style="font-weight:700;margin-bottom:0.3rem;color:var(--text-dark);">Şifre Değiştir</h5>
+    <p id="editUserLabel" style="color:var(--muted);font-size:0.9rem;margin-bottom:1.5rem;"></p>
+    <input type="hidden" id="editUserId">
+    <div class="mb-4">
+      <label class="form-label">Yeni Şifre (min. 6 karakter)</label>
+      <input type="password" id="editPassword" class="form-control" placeholder="••••••">
+    </div>
+    <div id="editError" style="color:#dc2626;font-size:0.87rem;margin-bottom:1rem;display:none;"></div>
+    <div style="display:flex;gap:0.8rem;justify-content:flex-end;">
+      <button class="btn-outline" onclick="document.getElementById('modalEdit').style.display='none'">İptal</button>
+      <button class="btn-accent" onclick="submitEdit()"><i class="ri-check-line"></i> Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openEditModal(id, username) {
+  document.getElementById('editUserId').value = id;
+  document.getElementById('editUserLabel').textContent = '@' + username;
+  document.getElementById('editPassword').value = '';
+  document.getElementById('editError').style.display = 'none';
+  document.getElementById('modalEdit').style.display = 'flex';
+}
+
+function submitAdd() {
+  const username = document.getElementById('addUsername').value.trim();
+  const password = document.getElementById('addPassword').value;
+  const errEl = document.getElementById('addError');
+  errEl.style.display = 'none';
+
+  fetch('/admin/users', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action: 'add', username, password })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) { location.reload(); }
+    else { errEl.textContent = d.error; errEl.style.display = 'block'; }
+  });
+}
+
+function submitEdit() {
+  const id = document.getElementById('editUserId').value;
+  const password = document.getElementById('editPassword').value;
+  const errEl = document.getElementById('editError');
+  errEl.style.display = 'none';
+
+  fetch('/admin/users', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action: 'edit', id, password })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) { document.getElementById('modalEdit').style.display = 'none'; alert('Şifre güncellendi.'); }
+    else { errEl.textContent = d.error; errEl.style.display = 'block'; }
+  });
+}
+
+function deleteUser(id, username) {
+  if (!confirm('@' + username + ' kullanıcısını silmek istediğinize emin misiniz?')) return;
+  fetch('/admin/users', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action: 'delete', id })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) { location.reload(); }
+    else { alert(d.error); }
+  });
+}
+</script>
+
+<%- include('layout_end') %>

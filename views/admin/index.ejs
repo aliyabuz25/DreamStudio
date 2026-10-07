@@ -1,0 +1,112 @@
+<%- include('layout') %>
+
+<div class="row g-4 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="icon"><i class="ri-file-list-3-line"></i></div>
+      <div><div class="num"><%= totalOrders %></div><div class="lbl">Toplam Talep</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="icon"><i class="ri-time-line"></i></div>
+      <div><div class="num" style="color:#fbbf24;"><%= pendingOrders %></div><div class="lbl">Bekleyen</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="icon"><i class="ri-user-line"></i></div>
+      <div><div class="num"><%= todayVisitors %></div><div class="lbl">Bugün Ziyaretçi</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="icon"><i class="ri-coins-line"></i></div>
+      <div><div class="num" style="color:#34d399;"><%= new Intl.NumberFormat('tr-TR').format(totalCredit) %></div><div class="lbl">Toplam Kredi (₺)</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-8">
+    <div class="card-ds p-4">
+      <div class="section-title">Son 7 Gün — Başvurular & Ziyaretçiler</div>
+      <canvas id="chartMain" height="100"></canvas>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card-ds p-4 h-100">
+      <div class="section-title">Durum Dağılımı</div>
+      <canvas id="chartStatus" height="180"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="card-ds p-0">
+  <div class="d-flex align-items-center justify-content-between p-4 border-bottom" style="border-color:var(--border)!important;">
+    <div class="section-title mb-0">Son Talepler</div>
+    <a href="/admin/orders" class="btn-outline" style="font-size:0.8rem;padding:0.4rem 1rem;">Tümünü Gör</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Kod</th><th>Ad</th><th>Araç</th><th>Hizmet</th><th>Durum</th><th>Tarih</th><th></th></tr></thead>
+      <tbody>
+        <% recentOrders.forEach(o => { 
+           let label = o.status === 'odeme_bekliyor' ? 'Ödeme Bekleniyor' : o.status === 'beklemede' ? 'Onay Bekliyor' : o.status === 'inceleniyor' ? 'İşlemde/Tasarımda' : o.status === 'tamamlandi' ? 'Tamamlandı' : 'İptal Edildi';
+        %>
+        <tr>
+          <td><code style="color:var(--accent);font-size:0.85rem;background:rgba(230,57,70,0.1);padding:0.2rem 0.5rem;border-radius:4px;"><%= o.code %></code></td>
+          <td style="font-weight:500;"><%= o.name %></td>
+          <td style="color:var(--muted);font-size:0.85rem;"><%= o.car %></td>
+          <td style="font-size:0.85rem;"><%= o.service %></td>
+          <td><span class="badge-status s-<%= o.status %>"><%= label %></span></td>
+          <td style="color:var(--muted);font-size:0.85rem;"><%= o.created_at.split(' ')[0] %></td>
+          <td class="text-end"><a href="/admin/orders?id=<%= o.id %>" class="btn-outline" style="font-size:0.75rem;padding:0.3rem 0.8rem;">Detay</a></td>
+        </tr>
+        <% }); %>
+        <% if (recentOrders.length === 0) { %>
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">Henüz talep yok</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('layout_end') %>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const labels = <%- JSON.stringify(last7.map(i => i.date)) %>;
+const orderData = <%- JSON.stringify(last7.map(i => i.count)) %>;
+const visitorData = <%- JSON.stringify(last7v) %>;
+
+new Chart(document.getElementById('chartMain'), {
+  type:'line',
+  data:{
+    labels,
+    datasets:[
+      { label:'Başvurular', data:orderData, borderColor:'#111', backgroundColor:'rgba(0,0,0,0.05)', tension:0.4, pointRadius:4, pointBackgroundColor:'#111', fill:true },
+      { label:'Ziyaretçiler', data:visitorData, borderColor:'#adb5bd', backgroundColor:'rgba(173,181,189,0.1)', tension:0.4, pointRadius:4, pointBackgroundColor:'#adb5bd', fill:true }
+    ]
+  },
+  options:{
+    plugins:{ legend:{ labels:{ color:'#6c757d', font:{size:12} } } },
+    scales:{
+      x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ color:'#adb5bd', font:{size:11} } },
+      y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ color:'#adb5bd', font:{size:11} }, beginAtZero:true }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartStatus'), {
+  type:'doughnut',
+  data:{
+    labels:['Beklemede','İnceleniyor','Tamamlandı','İptal'],
+    datasets:[{ data:[<%= pendingOrders %>, <%= inceleniyor %>, <%= doneOrders %>, <%= iptal %>], backgroundColor:['#d97706','#4f46e5','#059669','#dc2626'], borderWidth:0 }]
+  },
+  options:{
+    cutout:'75%',
+    plugins:{ legend:{ position:'bottom', labels:{ color:'#6c757d', font:{size:12}, padding:16 } } }
+  }
+});
+</script>

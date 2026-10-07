@@ -1,0 +1,292 @@
+<%- include('layout') %>
+
+<!-- ÖZET KARTLAR -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="lbl mb-1">Toplam Gelir</div>
+      <div class="num" style="color:#059669;">₺<%= new Intl.NumberFormat('tr-TR').format(totalIn) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="lbl mb-1">Toplam Gider</div>
+      <div class="num" style="color:#dc2626;">₺<%= new Intl.NumberFormat('tr-TR').format(totalOut) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="lbl mb-1">Net Bakiye</div>
+      <div class="num" style="color:<%= balance >= 0 ? '#059669' : '#dc2626' %>;">₺<%= new Intl.NumberFormat('tr-TR').format(balance) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="lbl mb-1">Bu Ay Gelir</div>
+      <div class="num" style="color:#4f46e5;">₺<%= new Intl.NumberFormat('tr-TR').format(monthIn) %></div>
+    </div>
+  </div>
+</div>
+
+<!-- DÖNEM İSTATİSTİKLERİ -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card-ds p-4">
+      <div class="section-title"><i class="ri-calendar-week-line me-2"></i>Bu Hafta</div>
+      <div class="d-flex justify-content-between mb-2">
+        <span style="color:var(--muted);font-size:0.9rem;">Gelir</span>
+        <span style="color:#059669;font-weight:600;">₺<%= new Intl.NumberFormat('tr-TR').format(weekIn) %></span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span style="color:var(--muted);font-size:0.9rem;">Gider</span>
+        <span style="color:#dc2626;font-weight:600;">₺<%= new Intl.NumberFormat('tr-TR').format(weekOut) %></span>
+      </div>
+      <hr style="border-color:var(--border);">
+      <div class="d-flex justify-content-between">
+        <span style="font-weight:600;font-size:0.9rem;">Net</span>
+        <span style="font-weight:700;color:<%= weekBalance >= 0 ? '#059669' : '#dc2626' %>;">₺<%= new Intl.NumberFormat('tr-TR').format(weekBalance) %></span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card-ds p-4">
+      <div class="section-title"><i class="ri-calendar-line me-2"></i>Bu Ay</div>
+      <div class="d-flex justify-content-between mb-2">
+        <span style="color:var(--muted);font-size:0.9rem;">Gelir</span>
+        <span style="color:#059669;font-weight:600;">₺<%= new Intl.NumberFormat('tr-TR').format(monthIn) %></span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span style="color:var(--muted);font-size:0.9rem;">Gider</span>
+        <span style="color:#dc2626;font-weight:600;">₺<%= new Intl.NumberFormat('tr-TR').format(monthOut) %></span>
+      </div>
+      <hr style="border-color:var(--border);">
+      <div class="d-flex justify-content-between">
+        <span style="font-weight:600;font-size:0.9rem;">Net</span>
+        <span style="font-weight:700;color:<%= monthBalance >= 0 ? '#059669' : '#dc2626' %>;">₺<%= new Intl.NumberFormat('tr-TR').format(monthBalance) %></span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card-ds p-4">
+      <div class="section-title"><i class="ri-calendar-2-line me-2"></i>Bu Yıl</div>
+      <div class="d-flex justify-content-between mb-2">
+        <span style="color:var(--muted);font-size:0.9rem;">Gelir</span>
+        <span style="color:#059669;font-weight:600;">₺<%= new Intl.NumberFormat('tr-TR').format(yearIn) %></span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span style="color:var(--muted);font-size:0.9rem;">Gider</span>
+        <span style="color:#dc2626;font-weight:600;">₺<%= new Intl.NumberFormat('tr-TR').format(yearOut) %></span>
+      </div>
+      <hr style="border-color:var(--border);">
+      <div class="d-flex justify-content-between">
+        <span style="font-weight:600;font-size:0.9rem;">Net</span>
+        <span style="font-weight:700;color:<%= yearBalance >= 0 ? '#059669' : '#dc2626' %>;">₺<%= new Intl.NumberFormat('tr-TR').format(yearBalance) %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- KAYIT EKLE -->
+  <div class="col-md-4">
+    <div class="card-ds p-4">
+      <div class="section-title">Manuel Kayıt Ekle</div>
+      <form id="addForm">
+        <div class="mb-3">
+          <label class="form-label">Tür</label>
+          <select name="type" id="addType" class="form-select">
+            <option value="gelir">+ Gelir</option>
+            <option value="gider">- Gider</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tutar (₺)</label>
+          <input type="number" id="addAmount" class="form-control" placeholder="0" step="0.01" min="0" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Açıklama</label>
+          <input type="text" id="addDesc" class="form-control" placeholder="Açıklama...">
+        </div>
+        <button type="submit" class="btn-accent w-100"><i class="ri-add-line"></i> Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- HAREKETLER LİSTESİ -->
+  <div class="col-md-8">
+    <div class="card-ds overflow-hidden">
+      <div class="d-flex align-items-center justify-content-between p-4" style="border-bottom:1px solid var(--border);">
+        <div class="section-title mb-0">Tüm Hareketler</div>
+        <button class="btn-outline" onclick="window.print()" style="font-size:0.8rem;padding:0.4rem 0.8rem;"><i class="ri-printer-line"></i> Yazdır</button>
+      </div>
+      <div class="table-responsive">
+        <table id="creditsTable" class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Tür</th>
+              <th>Tutar</th>
+              <th>Açıklama</th>
+              <th>Tarih</th>
+              <th>Dekont</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="creditsBody">
+            <% credits.forEach(c => { %>
+            <tr id="cr-<%= c.id %>">
+              <td>
+                <span class="badge-status <%= c.type === 'gelir' ? 's-tamamlandi' : 's-iptal' %>">
+                  <%= c.type === 'gelir' ? '+ Gelir' : '- Gider' %>
+                </span>
+              </td>
+              <td style="font-weight:700;color:<%= c.type === 'gelir' ? '#059669' : '#dc2626' %>;">
+                ₺<%= new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(c.amount) %>
+              </td>
+              <td style="color:var(--muted);font-size:0.85rem;"><%= c.description %></td>
+              <td style="color:var(--muted);font-size:0.85rem;"><%= c.created_at ? c.created_at.split(' ')[0] : '-' %></td>
+              <td>
+                <% if (c.order_code) { %>
+                  <button class="btn-outline" style="padding:0.3rem 0.6rem;font-size:0.75rem;" onclick="printDekont('<%= c.id %>')">
+                    <i class="ri-file-text-line"></i> Dekont
+                  </button>
+                <% } else { %>
+                  <span style="color:var(--muted);font-size:0.75rem;">—</span>
+                <% } %>
+              </td>
+              <td>
+                <button onclick="deleteCredit(<%= c.id %>)" style="background:none;border:none;color:#dc262650;cursor:pointer;font-size:1.1rem;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#dc262650'">
+                  <i class="ri-delete-bin-line"></i>
+                </button>
+              </td>
+            </tr>
+            <% }); %>
+            <% if (credits.length === 0) { %>
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:3rem;">Henüz kayıt yok</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEKONT PRINT ALANI (Gizli) -->
+<div id="dekontArea" style="display:none;">
+  <div id="dekontContent"></div>
+</div>
+
+<!-- PRINT CSS -->
+<style>
+@media print {
+  body * { visibility: hidden !important; }
+  #dekontArea, #dekontArea * { visibility: visible !important; }
+  #dekontArea { position: fixed; inset: 0; background: #fff; padding: 3rem; z-index: 99999; display: block !important; }
+}
+</style>
+
+<%- include('layout_end') %>
+
+<script>
+// Kayıt Ekle
+document.getElementById('addForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const r = await fetch('/admin/credits', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      action: 'add',
+      type: document.getElementById('addType').value,
+      amount: document.getElementById('addAmount').value,
+      description: document.getElementById('addDesc').value
+    }).toString()
+  });
+  const d = await r.json();
+  if (d.ok) location.reload();
+  else alert(d.error || 'Hata');
+});
+
+// Kayıt Sil
+async function deleteCredit(id) {
+  if (!confirm('Kaydı silmek istiyor musunuz?')) return;
+  const r = await fetch('/admin/credits', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ action: 'delete', id }).toString()
+  });
+  const d = await r.json();
+  if (d.ok) location.reload();
+}
+
+// Dekont Yazdır
+async function printDekont(creditId) {
+  const r = await fetch(`/admin/credits/dekont/${creditId}`);
+  const d = await r.json();
+  if (!d.ok) return alert('Dekont bilgisi bulunamadı');
+  const c = d.credit;
+  const o = d.order;
+
+  const html = `
+    <div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:2rem;border:1px solid #eee;border-radius:12px;">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <h2 style="font-size:1.5rem;font-weight:700;margin:0;">DreamStudio</h2>
+        <p style="color:#888;margin:0.3rem 0 0;">Resmi Ödeme Dekontu</p>
+      </div>
+      
+      <div style="border-top:2px solid #111;border-bottom:1px solid #eee;padding:1rem 0;margin-bottom:1.5rem;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+          <span style="color:#888;font-size:0.9rem;">Dekont No</span>
+          <span style="font-weight:600;font-family:monospace;">#DS-${c.id}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+          <span style="color:#888;font-size:0.9rem;">Sipariş Kodu</span>
+          <span style="font-weight:600;font-family:monospace;">${c.order_code || '-'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:#888;font-size:0.9rem;">Tarih</span>
+          <span style="font-weight:600;">${c.created_at}</span>
+        </div>
+      </div>
+
+      ${o ? `
+      <div style="margin-bottom:1.5rem;">
+        <h4 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:0.8rem;">Müşteri Bilgileri</h4>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+          <span style="color:#888;font-size:0.9rem;">Ad Soyad</span>
+          <span style="font-weight:500;">${o.name}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+          <span style="color:#888;font-size:0.9rem;">Telefon</span>
+          <span style="font-weight:500;">${o.phone}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+          <span style="color:#888;font-size:0.9rem;">Araç</span>
+          <span style="font-weight:500;">${o.car}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:#888;font-size:0.9rem;">Paket</span>
+          <span style="font-weight:500;">${o.package || o.service}</span>
+        </div>
+      </div>
+      ` : ''}
+
+      <div style="background:#f8f9fa;border-radius:8px;padding:1.2rem;margin-bottom:1.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:1rem;font-weight:600;">Ödeme Tutarı</span>
+          <span style="font-size:1.5rem;font-weight:700;color:#059669;">₺${new Intl.NumberFormat('tr-TR', {minimumFractionDigits:2}).format(c.amount)}</span>
+        </div>
+        <div style="color:#888;font-size:0.85rem;margin-top:0.3rem;">${c.description}</div>
+      </div>
+
+      <div style="border-top:2px solid #111;padding-top:1rem;text-align:center;">
+        <p style="color:#888;font-size:0.8rem;margin:0;">Bu dekont DreamStudio sistemi tarafından otomatik oluşturulmuştur.</p>
+        <p style="color:#888;font-size:0.8rem;margin:0.2rem 0 0;">Güven Sanayi Sitesi, Saray Mah. T Blok No:26, Ümraniye/İstanbul</p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('dekontContent').innerHTML = html;
+  document.getElementById('dekontArea').style.display = 'block';
+  window.print();
+  document.getElementById('dekontArea').style.display = 'none';
+}
+</script>

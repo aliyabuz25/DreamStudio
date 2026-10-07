@@ -1,0 +1,75 @@
+<%- include('layout') %>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card-ds p-4 mb-4">
+      <div class="section-title">Şifre Değiştir</div>
+      <% if (msg) { %>
+      <div style="padding:0.6rem 1rem;border-radius:10px;margin-bottom:1rem;font-size:0.85rem;
+        background:<%= msg.type === 'error' ? 'rgba(248,113,113,0.1)' : 'rgba(74,222,128,0.1)' %>;
+        border:1px solid <%= msg.type === 'error' ? 'rgba(248,113,113,0.2)' : 'rgba(74,222,128,0.2)' %>;
+        color:<%= msg.type === 'error' ? '#f87171' : '#34d399' %>;">
+        <%= msg.text %>
+      </div>
+      <% } %>
+      <form method="POST" action="/admin/settings">
+        <input type="hidden" name="action" value="change_password">
+        <div class="mb-3">
+          <label class="form-label">Mevcut Şifre</label>
+          <input type="password" name="current" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Yeni Şifre</label>
+          <input type="password" name="new" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Yeni Şifre (Tekrar)</label>
+          <input type="password" name="confirm" class="form-control" required>
+        </div>
+        <button type="submit" class="btn-accent w-100">Şifreyi Güncelle</button>
+      </form>
+    </div>
+
+    <div class="card-ds p-4">
+      <div class="section-title">Oturum Bilgisi</div>
+      <div style="display:flex;flex-direction:column;gap:0.6rem;font-size:0.85rem;">
+        <div><span style="color:var(--muted);">Kullanıcı:</span> <strong><%= adminUser %></strong></div>
+        <div><span style="color:var(--muted);">Tarih:</span> <%= new Date().toLocaleString('tr-TR') %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card-ds p-4 mb-4">
+      <div class="section-title">Veritabanı İstatistikleri</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <% for (const [table, info] of Object.entries(counts)) { %>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.5rem;">
+          <div style="font-size:1.8rem;font-weight:700;color:var(--text-dark);"><%= info.count %></div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-top:0.4rem;"><%= info.label %></div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card-ds p-4">
+      <div class="section-title">Tehlikeli Alan</div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Ziyaretçi loglarını temizle veya test verilerini sil.</p>
+      <div style="display:flex;gap:0.8rem;flex-wrap:wrap;">
+        <button onclick="clearVisitors()" class="btn-outline" style="border-color:rgba(248,113,113,0.3);color:#f87171;">
+          <i class="ri-delete-bin-line"></i> Ziyaretçi Loglarını Temizle
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('layout_end') %>
+<script>
+async function clearVisitors() {
+  if (!confirm('Tüm ziyaretçi kayıtları silinecek. Emin misiniz?')) return;
+  const r = await fetch('/admin/api/clear_visitors', { method:'POST' });
+  const d = await r.json();
+  if (d.ok) { alert('Temizlendi.'); location.reload(); }
+}
+</script>

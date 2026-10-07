@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sipariş Takip — DreamStudio</title>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+  :root { 
+    --bg:#ffffff; 
+    --border:rgba(0,0,0,0.1); 
+    --accent:#111111; 
+    --muted:rgba(0,0,0,0.4); 
+    --font:'SF Pro Display',-apple-system,sans-serif; 
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--accent); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1rem; overflow-x:hidden; }
+  
+  .wrapper { width:100%; max-width:600px; padding:2rem 1rem; }
+  
+  .logo { text-align:center; font-size:1.5rem; font-weight:400; color:var(--accent); margin-bottom:3rem; letter-spacing:-0.02em; }
+  
+  .form-row { display:flex; gap:0.5rem; margin-bottom:2rem; position:relative; }
+  input { flex:1; background:transparent; border:none; border-bottom:1px solid var(--border); color:var(--accent); border-radius:0; padding:1rem 0; font-size:1.2rem; outline:none; font-family:var(--font); transition:all 0.3s ease; font-weight:300; letter-spacing:2px; text-align:center; }
+  input:focus { border-color:var(--accent); }
+  input::placeholder { color:rgba(0,0,0,0.2); font-weight:300; letter-spacing:normal; }
+  
+  .btn { position:absolute; right:0; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--accent); font-size:1.6rem; cursor:pointer; transition:all 0.3s ease; display:flex; align-items:center; opacity:0.3; padding: 0 1rem; }
+  .btn:hover { opacity:1; transform:translateY(-50%) scale(1.1); }
+  
+  .result { display:none; animation:fadeIn 0.5s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  
+  
+  /* Status Bar */
+  .status-line-container { width: 100%; height: 2px; background: rgba(0,0,0,0.1); border-radius: 2px; position: relative; margin: 3rem 0 1rem; }
+  .status-line-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 15px rgba(0,0,0,0.1); transition: width 1s ease; border-radius: 2px; }
+  
+  .status-dots { display: flex; justify-content: space-between; position: absolute; top: -5px; width: 100%; }
+  .status-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid rgba(0,0,0,0.2); transition: all 1s ease; }
+  .status-dot.active { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+
+  /* Grid details */
+  .info-grid { border-top:1px solid var(--border); padding-top:2rem; margin-top:2rem; }
+  .info-row { display:flex; justify-content:space-between; align-items:center; padding-bottom:1.2rem; margin-bottom:1.2rem; border-bottom:1px dashed rgba(0,0,0,0.05); }
+  .info-row:last-child { border-bottom:none; padding-bottom:0; margin-bottom:0; }
+  .info-label { color:var(--muted); font-size:0.9rem; font-weight:300; }
+  .info-val { color:var(--accent); font-size:1.05rem; font-weight:400; text-align:right; }
+  
+  .reply-box { background:transparent; border-left:2px solid var(--accent); padding-left:1.5rem; margin-top:3rem; }
+  .reply-box h6 { color:var(--muted); font-size:0.8rem; font-weight:400; margin-bottom:0.8rem; text-transform:uppercase; letter-spacing:1px; }
+  .reply-box p { color:var(--accent); font-size:1.05rem; line-height:1.6; font-weight:300; margin:0; }
+  .reply-img { max-width:100%; border-radius:12px; margin-top:1.5rem; }
+  
+  .error-box { background:transparent; border:1px solid rgba(255,94,94,0.3); border-radius:16px; padding:1.5rem; color:#ff5e5e; font-size:1rem; text-align:center; font-weight:300; margin-top:2rem; }
+  
+  .back { text-align:center; margin-top:4rem; }
+  .back a { color:var(--muted); font-size:0.95rem; text-decoration:none; transition:color 0.3s; font-weight:300; border-bottom:1px solid transparent; padding-bottom:2px; }
+  .back a:hover { color:var(--accent); border-color:var(--accent); }
+  
+  .status-text { text-align:center; font-size:1.3rem; font-weight:300; color:var(--muted); margin-top:1rem; letter-spacing:-0.02em; transition:color 0.3s; }
+  .status-text span { color:var(--accent); font-weight:400; }
+
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="logo">
+    <img src="/logo.png" alt="DreamStudio" style="height:120px; display:block; margin:0 auto 0.5rem;">
+    Sipariş Takip
+  </div>
+
+  <div class="form-row">
+    <input type="text" id="codeInput" placeholder="Takip Kodu (DS-XXXXXXX)" value="<%= typeof code !== 'undefined' ? code : '' %>">
+    <button class="btn" onclick="trackOrder()"><i class="ri-search-line"></i></button>
+  </div>
+
+  <div id="result" class="result"></div>
+
+  <div class="back"><a href="/">Anasayfaya Dön</a></div>
+</div>
+
+<script>
+const STATUS_STEPS = ['odeme_bekliyor', 'beklemede', 'inceleniyor', 'tamamlandi'];
+const STATUS_LABELS = { odeme_bekliyor:'Ödeme Bekleniyor', beklemede:'Onay Bekliyor', inceleniyor:'İşlemde', tamamlandi:'Tamamlandı', iptal:'İptal Edildi' };
+
+
+
+async function trackOrder() {
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if (!code) return;
+  document.getElementById('codeInput').value = code; // update visual
+  
+  const res = document.getElementById('result');
+  res.style.display = 'block';
+  res.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);"><i class="ri-loader-4-line" style="animation:spin 1s linear infinite;font-size:1.5rem;"></i></div>';
+
+  try {
+    const r = await fetch('/api/track?code=' + encodeURIComponent(code));
+    const d = await r.json();
+    if (!d.success) {
+      res.innerHTML = '<div class="error-box">' + (d.error || 'Kod bulunamadı. Lütfen kontrol ediniz.') + '</div>';
+      return;
+    }
+    const o = d.order;
+    
+    // Status visual mapping class
+    const isCancel = o.status === 'iptal';
+    const isCustomDesign = o.service && o.service.includes('Özel Tasarım');
+    
+    // Eğer status eski formatlaysa ve STATUS_STEPS'de yoksa (örn 'beklemede' kaldıysa) onu bul.
+    let currentStatus = o.status;
+    if (!STATUS_STEPS.includes(currentStatus) && !isCancel) {
+        currentStatus = isCustomDesign ? 'odeme_bekliyor' : 'beklemede';
+    }
+
+    // Özel tasarım değilse ama API'den odeme_bekliyor geldiyse, onu kullanıcıya "beklemede" (Onay Bekliyor) gibi gösterelim:
+    if (currentStatus === 'odeme_bekliyor' && !isCustomDesign) {
+        currentStatus = 'beklemede';
+    }
+
+    const stepIdx = STATUS_STEPS.indexOf(currentStatus);
+    const pct = isCancel ? 0 : (stepIdx / (STATUS_STEPS.length - 1)) * 100;
+    
+    // Status Tracker GUI
+    const statusTracker = `
+      ${!isCancel ? `
+      <div class="status-line-container">
+        <div class="status-line-fill" style="width: ${pct}%"></div>
+        <div class="status-dots">
+          <div class="status-dot ${stepIdx >= 0 ? 'active' : ''}"></div>
+          <div class="status-dot ${stepIdx >= 1 ? 'active' : ''}"></div>
+          <div class="status-dot ${stepIdx >= 2 ? 'active' : ''}"></div>
+          <div class="status-dot ${stepIdx >= 3 ? 'active' : ''}"></div>
+        </div>
+      </div>
+      ` : ''}
+      
+      <div class="status-text">${isCancel ? '<span style="color:#ff5e5e;">İptal Edildi</span>' : `Durum: <span>${STATUS_LABELS[currentStatus]}</span>`}</div>
+    `;
+
+    // Ödeme ekranı bildirimi (Sadece Özel Tasarım ve odeme_bekliyor ise)
+    // Ödeme ekranı bildirimi (Tüm paketler için odeme_bekliyor ise)
+    let packagePrice = "2.000 ₺";
+    if (o.package && o.package.includes('Pro Paket')) packagePrice = "6.000 ₺";
+    else if (o.package && o.package.includes('VIP')) packagePrice = "15.000 ₺";
+
+    const paymentBox = (currentStatus === 'odeme_bekliyor') ? `
+      <div style="background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px; padding: 1.5rem; text-align: center; margin-top: 2rem;">
+        <i class="ri-secure-payment-line" style="font-size: 2rem; color: var(--text); margin-bottom: 0.5rem; display: block;"></i>
+        <h5 style="color: var(--accent); font-weight: 500; font-size: 1.1rem; margin-bottom: 0.5rem;">Ödeme Bekleniyor</h5>
+        <p style="color: var(--muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">Tasarım/üretim sürecinin başlayabilmesi için ön ödemeyi tamamlamanız gerekmektedir.</p>
+        <div style="font-size: 1.8rem; font-weight: 300; color: var(--accent); margin-bottom: 1.2rem;">${packagePrice}</div>
+        
+        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: left; margin-bottom: 1rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;"><span style="color:var(--muted); font-size:0.85rem;">Banka:</span><span style="font-weight:500; color:var(--accent); font-size:0.85rem;">AKBANK ALTUNİZADE</span></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;"><span style="color:var(--muted); font-size:0.85rem;">Alıcı:</span><span style="font-weight:500; color:var(--accent); font-size:0.85rem;">CELALETTİN YABUZ</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted); font-size:0.85rem;">İBAN:</span><span style="font-weight:600; color:var(--accent); font-size:0.85rem; font-family:monospace;">TR96 0004 6008 6688 8000 0775 26</span></div>
+        </div>
+        
+        <div style="color: #d32f2f; font-size:0.85rem; font-weight:500; margin-bottom:1rem;">Açıklama alanına "${o.code}" yazmayı unutmayınız.</div>
+        
+        <button class="btn" style="position:static; transform:none; margin:0 auto; width:100%; justify-content:center; padding: 1rem; border-radius:12px; background:var(--accent); color:var(--bg);">Ödemeyi Yaptım (Bildir)</button>
+      </div>
+    ` : '';
+
+    res.innerHTML = `
+      ${statusTracker}
+      ${paymentBox}
+      <div class="info-grid">
+        <div class="info-row"><span class="info-label">Sipariş Kodu</span><span class="info-val" style="letter-spacing:1px;font-family:monospace;">${o.code}</span></div>
+        <div class="info-row"><span class="info-label">Müşteri</span><span class="info-val">${o.name}</span></div>
+        <div class="info-row"><span class="info-label">Araç</span><span class="info-val">${o.car}</span></div>
+        <div class="info-row"><span class="info-label">Hizmet</span><span class="info-val">${o.service}</span></div>
+        <div class="info-row"><span class="info-label">Paket</span><span class="info-val">${o.package || '-'}</span></div>
+        <div class="info-row"><span class="info-label">Tarih</span><span class="info-val" style="color:var(--muted);font-weight:300;">${o.created_at}</span></div>
+      </div>
+      ${o.reply ? `<div class="reply-box"><h6>Ekip Yanıtı</h6><p>${o.reply.replace(/\n/g,'<br>')}</p>${o.reply_image ? '<img src="/admin/uploads/'+o.reply_image+'" class="reply-img">' : ''}</div>` : ''}
+    `;
+  } catch(e) {
+    res.innerHTML = '<div class="error-box">Bağlantı hatası. Lütfen tekrar deneyin.</div>';
+  }
+}
+
+if (document.getElementById('codeInput').value) trackOrder();
+</script>
+</body>
+</html>

@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DreamStudio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="/cookieconsent.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@19.2.16/build/css/intlTelInput.css">
+  
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0a0a0a;
+      --accent: #111111;
+      --muted: #666666;
+      --border: #e0e0e0;
+      --card-bg: #f8f8f8;
+      --hover-bg: #f0f0f0;
+      --input-bg: #fafafa;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      overflow: hidden; /* Dış scroll kapalı, SPA slider kendi içinde scroll edecek */
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── PAGE SLIDER (SPA) ── */
+    .app-container {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .page-slider {
+      display: flex;
+      width: 300vw; /* 3 view yan yana (Home, Form, Press) */
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
+      transform: translateX(0);
+    }
+    
+    .view-screen {
+      width: 100vw;
+      height: 100vh;
+      overflow-y: auto; /* İçerikler taşarsa kendi içinde kaysın */
+      overflow-x: hidden;
+      position: relative;
+      background: var(--bg);
+    }
+    
+    /* Geri Butonu (Formdan anasayfaya) */
+    .btn-back-home {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      z-index: 300;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-back-home:hover { 
+      background: var(--input-bg); 
+      color: var(--text);
+      border-color: var(--text);
+      transform: translateX(-3px); 
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: absolute;
+      top: 0; left: 0; width: 100%;
+      z-index: 200;
+      padding: 1.5rem 5vw;
+      background: transparent !important;
+      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--text) !important;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      pointer-events: auto;
+    }
+    .navbar-brand img { height: 40px; margin-right: 12px; }
+    
+    .navbar-menu {
+      display: none; /* Mobilde gizli */
+      gap: 2rem;
+      pointer-events: auto;
+    }
+    @media(min-width: 768px) {
+      .navbar-menu { display: flex; }
+    }
+    .navbar-menu a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      transition: opacity 0.3s ease;
+    }
+    .navbar-menu a:hover { opacity: 0.6; }
+
+    /* ── MOBILE MENU (HAMBURGER) ── */
+    .hamburger-btn {
+      display: block;
+      pointer-events: auto;
+      background: transparent;
+      border: none;
+      font-size: 1.8rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+    @media(min-width: 768px) {
+      .hamburger-btn { display: none; }
+    }
+
+    .mobile-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mobile-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mobile-close-btn {
+      position: absolute;
+      top: 2rem;
+      right: 5vw;
+      background: transparent;
+      border: none;
+      font-size: 2.2rem;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .mobile-close-btn:hover {
+      transform: scale(1.1) rotate(90deg);
+    }
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      text-align: center;
+    }
+    .mobile-nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 2.2rem;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .mobile-nav-links a:hover { opacity: 0.5; transform: translateY(-2px); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      padding: 12rem 0 10rem;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 80vh;
+    }
+
+    .hero-video-wrap {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .hero-video {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 100vw;
+      height: 56.25vw;
+      min-width: 177.78vh;
+      min-height: 100vh;
+      transform: translate(-50%, -50%);
+      border: none;
+      pointer-events: none;
+      opacity: 0.15;
+      filter: invert(1);
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.9) 80%, #ffffff 100%);
+      z-index: 2;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      padding: 0 2rem;
+      width: 100%;
+      max-width: 900px;
+      animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(30px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .hero-content h1 {
+      font-size: clamp(2.5rem, 8vw, 6rem);
+      font-weight: 300;
+      line-height: 1.05;
+      color: var(--text);
+      letter-spacing: -0.04em;
+      margin-bottom: 1.2rem;
+    }
+    .hero-content h1 span { font-weight: 600; color: #e63946; display: inline-block; }
+
+    .hero-content p {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: var(--muted);
+      margin: 0 auto 2.5rem;
+      max-width: 600px;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    .btn-red {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 50px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      letter-spacing: -0.01em;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      cursor: pointer;
+      padding: 1.2rem 2.5rem;
+      font-size: 1rem;
+    }
+    @media(min-width: 768px) {
+      .btn-red { padding: 1.4rem 3.5rem; font-size: 1.15rem; }
+    }
+    .btn-red:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      color: var(--bg);
+    }
+
+    /* ── PRICING SECTION ── */
+    .pricing-section {
+      padding: 0 5vw 4rem; 
+      position: relative;
+      z-index: 3;
+    }
+    
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+      text-align: left;
+    }
+    @media(min-width: 768px) {
+      .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media(min-width: 1024px) {
+      .pricing-grid { grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+    }
+
+    .pricing-card {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 2rem 1rem;
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @media(min-width: 768px) {
+      .pricing-card { padding: 2.5rem 1.5rem; }
+    }
+    .pricing-card:hover { transform: translateY(-5px); }
+    
+    .pricing-card.featured { background: transparent; border: none; box-shadow: none; }
+    
+    .pricing-card h3 { font-size: 1.3rem; font-weight: 500; color: var(--text); margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+    .pricing-card .price { font-size: 2.8rem; font-weight: 300; color: var(--text); margin-bottom: 1rem; letter-spacing: -0.03em; display: flex; align-items: baseline; gap: 0.4rem; }
+    .pricing-card .price span { font-size: 1rem; color: var(--muted); font-weight: 400; letter-spacing: normal; }
+    .pricing-card .desc { font-size: 1rem; color: var(--muted); line-height: 1.5; margin-bottom: 2.5rem; font-weight: 400; }
+    
+    .pricing-card .features { list-style: none; padding: 0; margin: 0; }
+    .pricing-card .features li { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.2rem; font-size: 1rem; color: var(--text); font-weight: 400; }
+    .pricing-card .features li i { color: var(--text); font-size: 1.2rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: transparent;
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      position: relative;
+      z-index: 3;
+      background: #fafafa;
+    }
+    .footer-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; align-items: center; text-align: center; }
+    @media(min-width: 768px) { .footer-container { flex-direction: row; justify-content: space-between; text-align: left; } }
+    .footer-left { display: flex; flex-direction: column; gap: 0.8rem; }
+    .footer-left a { color: var(--text); text-decoration: none; font-weight: 400; display: inline-flex; align-items: center; gap: 0.5rem; transition: opacity 0.3s; }
+    .footer-left a:hover { opacity: 0.7; text-decoration: underline; text-underline-offset: 4px; }
+
+
+    /* =======================================
+       FORM CSS (TEKLIF VIEW) 
+       ======================================= */
+    .teklif-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4rem 1rem 2rem; min-height:100vh; }
+    .teklif-box { width: 100%; max-width: 640px; }
+
+    .teklif-box h2 { color: var(--text); font-weight: 500; font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 0.2rem; letter-spacing: -0.03em; text-align: center; }
+    .teklif-box .sub { color: var(--muted); font-size: 0.95rem; font-weight: 400; margin-bottom: 1.5rem; text-align: center; letter-spacing: -0.01em; }
+
+    /* Progress Steps */
+    .order-steps { display: flex; align-items: center; justify-content: center; gap: 0.4rem; margin-bottom: 1.5rem; }
+    .order-step-dot { width: 6px; height: 6px; border-radius: 50%; background: #e0e0e0; transition: all 0.5s ease; }
+    .order-step-dot.active { background: var(--text); transform: scale(1.5); box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .order-step-dot.done { background: #b0b0b0; }
+
+    /* Panels */
+    .order-panel { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .order-panel.active { display: block; opacity: 1; transform: translateY(0); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    .order-panel h4 { color: var(--text); font-weight: 500; font-size: 1.4rem; margin-bottom: 0.2rem; letter-spacing: -0.02em; }
+    .step-sub { color: var(--muted); font-size: 0.85rem; font-weight: 400; margin-bottom: 1.5rem; line-height: 1.4; }
+    
+    /* Form Elements */
+    .form-control { background: var(--input-bg) !important; border: 1px solid #e5e5e5 !important; color: var(--text) !important; border-radius: 12px; padding: 0.9rem 1.2rem; font-size: 1rem; font-weight: 400; transition: all 0.3s ease; letter-spacing: -0.01em; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); }
+    .form-control:focus { border-color: #000 !important; box-shadow: 0 0 0 4px rgba(0,0,0,0.05) !important; background: #fff !important; }
+    .form-control::placeholder { color: #aaa; font-weight: 300; }
+
+    select.form-control { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 1rem center !important; background-size: 12px !important; padding-right: 2.5rem; cursor: pointer; }
+    select.form-control option { background: #ffffff; color: #000; padding: 1rem; }
+    select.form-control:disabled { opacity: 0.5; cursor: not-allowed; background: #f0f0f0 !important; }
+
+    .iti { width: 100%; display: block; margin-bottom: 0.5rem; }
+    .iti__country-list { background: #ffffff; border: 1px solid #e5e5e5; border-radius: 12px; color: var(--text); box-shadow: 0 10px 30px rgba(0,0,0,0.1); font-weight: 400; z-index: 9999; margin-top: 5px; scrollbar-width: thin; scrollbar-color: #ddd transparent; text-align: left; }
+    .iti__country-list::-webkit-scrollbar { width: 6px; }
+    .iti__country-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+    .iti__country { padding: 10px 15px; transition: background 0.2s ease; }
+    .iti__country:hover { background: #f5f5f5; }
+    .iti__country.iti__highlight { background: #f0f0f0; color: var(--text); }
+    .iti__divider { border-bottom-color: #eee; }
+    .iti__dial-code { color: #888; margin-left: 6px; }
+    .iti__selected-flag { padding: 0 1rem 0 1.2rem; background: transparent !important; }
+    .iti__arrow { border-top-color: #666; }
+    .iti__arrow--up { border-bottom-color: #666; border-top-color: transparent; }
+    .iti__search-input { background: #f9f9f9; border: 1px solid #e5e5e5; color: var(--text); border-radius: 8px; padding: 0.6rem; margin: 0.5rem; width: calc(100% - 1rem); }
+    
+    .error-text { color: #d32f2f; font-size: 0.85rem; font-weight: 500; margin-top: 0.6rem; display: none; }
+    .is-invalid { border-color: #d32f2f !important; box-shadow: 0 0 0 4px rgba(211,47,47,0.1) !important; }
+
+    .step-btns { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 1.2rem 2rem; border-radius: 50px; font-size: 1.05rem; font-weight: 400; text-decoration: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); flex: 1; text-align: center; cursor: pointer; letter-spacing: -0.01em; }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); background: transparent; }
+
+    .service-opts { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem !important; }
+    .service-opt { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; background: var(--input-bg); border: 1px solid #e5e5e5; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .service-opt:hover { border-color: #ccc; background: #fdfdfd; }
+    .service-opt:has(input:checked) { border-color: #000; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .service-opt input { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+    .service-opt input:checked { border-color: #000; }
+    .service-opt input:checked::after { content:''; width: 8px; height: 8px; background: #000; border-radius: 50%; }
+    .service-opt span { color: #444; font-size: 0.95rem; font-weight: 400; transition: color 0.3s ease; letter-spacing: -0.01em; }
+    .service-opt:has(input:checked) span { color: #000; font-weight: 500; }
+
+    .photo-upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+    @media(min-width:576px) { .photo-upload-grid { grid-template-columns: repeat(4, 1fr); gap: 1rem; } }
+    .photo-slot { aspect-ratio: 1; border: 2px dashed #e0e0e0; border-radius: 12px; cursor: pointer; overflow: hidden; position: relative; background: #fafafa; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .photo-slot:hover { border-color: #aaa; background: #fff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    .photo-slot.has-photo { border-style: solid; border-color: #e5e5e5; }
+    .photo-slot-inner { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; color: #888; font-size: 0.85rem; font-weight: 500; pointer-events: none; transition: color 0.3s ease; }
+    .photo-slot:hover .photo-slot-inner { color: #333; }
+    .photo-slot-inner i { font-size: 1.6rem; color: #bbb; transition: color 0.3s ease; }
+    .photo-slot:hover .photo-slot-inner i { color: #666; }
+    .photo-slot-preview { position: absolute; inset: 0; object-fit: cover; width: 100%; height: 100%; border-radius: 12px; transition: transform 0.4s ease; }
+    .photo-slot.has-photo:hover .photo-slot-preview { transform: scale(1.05); }
+    .photo-slot-check { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; background: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .extra-slot { grid-column: span 1; }
+    .upload-hint { font-size: 0.85rem; color: #888; text-align: center; margin-top: 1rem; font-weight: 400; }
+
+    .tracking-box { border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 2rem 0; text-align: center; margin-bottom: 1.5rem; }
+    .tracking-label { font-size: 0.8rem; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.8rem; font-weight: 500; }
+    .tracking-code { font-size: 2.8rem; font-weight: 300; color: #000; letter-spacing: 6px; margin-bottom: 1.5rem; line-height:1; }
+    .copy-btn { background: #fff; border: 1px solid #ddd; color: #000; border-radius: 50px; padding: 0.8rem 2rem; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
+    .copy-btn:hover { border-color: #000; background: #fafafa; }
+    .tracking-link-box { text-align: center; margin-top:1.5rem; }
+    .tracking-link-box a { color: #000; text-decoration: none; font-weight: 500; font-size: 1rem; transition: opacity 0.3s; border-bottom: 1px solid #000; padding-bottom: 2px; }
+    .tracking-link-box a:hover { opacity: 0.6; }
+
+    /* ── CURSOR GLOW ── */
+    .cursor-glow {
+      position:fixed;
+      width:400px; height:400px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,0.03) 0%, transparent 70%);
+      pointer-events:none;
+      transform:translate(-50%,-50%);
+      z-index:1;
+      transition: left 0.1s linear, top 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+
+<!-- MOBIL TAM EKRAN MENU -->
+<div class="mobile-overlay" id="mobileMenu">
+  <button class="mobile-close-btn" onclick="toggleMobileMenu()"><i class="bi bi-x-lg"></i></button>
+  <div class="mobile-nav-links">
+    <a href="#" onclick="toggleMobileMenu(); goHome();">Anasayfa</a>
+    <a href="#" onclick="toggleMobileMenu(); goToForm();">İletişim</a>
+    <a href="#" onclick="toggleMobileMenu(); goToPress();">Basında Biz</a>
+  </div>
+</div>
+
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- SPA SLIDER KAPSAYICISI -->
+<div class="app-container">
+  <div class="page-slider" id="pageSlider">
+
+    <!-- VIEW 1: HOME -->
+    <div class="view-screen view-home">
+      <nav class="navbar" id="mainNav">
+        <a class="navbar-brand" href="#" onclick="goHome()"><img src="/logo.png" alt="DreamStudio"></a>
+        <div class="navbar-menu">
+          <a href="#" onclick="goHome()">Anasayfa</a>
+          <a href="#" onclick="goToForm()">İletişim</a>
+          <a href="#" onclick="goToPress()">Basında Biz</a>
+        </div>
+        <button class="hamburger-btn" onclick="toggleMobileMenu()"><i class="bi bi-list"></i></button>
+      </nav>
+
+      <section class="hero">
+        <div class="hero-video-wrap">
+          <iframe
+            class="hero-video"
+            src="https://www.youtube.com/embed/fPrfroXuJh8?autoplay=1&mute=1&loop=1&playlist=fPrfroXuJh8&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&vq=hd1080&playsinline=1&autohide=1&wmode=transparent"
+            frameborder="0"
+            allow="autoplay; encrypted-media"
+          ></iframe>
+        </div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+          <h1>Sınırları çizin. <br><span>Biz üretelim.</span></h1>
+          <p>Hayalinizdeki araca ulaşmak tek tık ötenizde. Talebinizi oluşturun, 10 dakika içinde tasarım uzmanlarımızdan ön cevap alın.</p>
+          <!-- BURASI ARTIK JS FONKSIYONUNU TETIKLIYOR -->
+          <button onclick="goToForm()" class="btn-red mb-5">
+            Talebinizi Oluşturun <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </section>
+
+      <section class="pricing-section">
+        <div class="pricing-header" style="text-align:center; margin-bottom: 4rem;">
+          <h2 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 300; letter-spacing: -0.03em; color: var(--text);">Paketler</h2>
+          <p style="color: var(--muted); font-size: 1.1rem; font-weight: 300; max-width: 500px; margin: 0.5rem auto 0;">Sürecinize en uygun konsept veya üretim paketini seçin.</p>
+        </div>
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <h3>Tekil Tasarım</h3>
+            <div class="price">2.000 ₺</div>
+            <p class="desc">Tek bir araç için özel tasarım konsepti oluşturulması.</p>
+            <ul class="features">
+              <li><i class="bi bi-check2"></i> 1 Araç Tasarımı</li>
+              <li><i class="bi bi-check2"></i> 2 Revizyon Hakkı</li>
+              <li><i class="bi bi-check2"></i> 48 Saatte Teslim</li>
+              <li><i class="bi bi-check2"></i> PDF & Görsel Sunum</li>
+            </ul>
+          </div>
+          <div class="pricing-card featured">
+            <h3>Pro Paket</h3>
+            <div class="price">6.000 ₺</div>
+            <p class="desc">Aynı aracın farklı bodykit veya renk varyasyonlarının detaylı çalışması.</p>
+            <ul class="features">
+              <li><i class="bi bi-check2"></i> 3 Araç Tasarım Varyasyonu</li>
+              <li><i class="bi bi-check2"></i> Sınırsız Revizyon</li>
+              <li><i class="bi bi-check2"></i> 3D Render Önizleme</li>
+              <li><i class="bi bi-check2"></i> Öncelikli Destek</li>
+            </ul>
+          </div>
+          <div class="pricing-card">
+            <h3>VIP Üretim</h3>
+            <div class="price">15.000 ₺<span>'den başlayan</span></div>
+            <p class="desc">Tasarım sürecinden kalıp ve parça üretimine kadar anahtar teslim proje.</p>
+            <ul class="features">
+              <li><i class="bi bi-check2"></i> 3D Araç Tarama</li>
+              <li><i class="bi bi-check2"></i> Araca Birebir Dijital Tasarım</li>
+              <li><i class="bi bi-check2"></i> Öncelikli Süreçlendirme</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ── ATÖLYEMİZ GÖRSELLERİ ── -->
+        <div style="max-width: 1200px; margin: 6rem auto 2rem;">
+          <h2 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 300; letter-spacing: -0.03em; color: var(--text); text-align: center; margin-bottom: 2.5rem;">Atölyemiz</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div style="border-radius: 20px; overflow: hidden; aspect-ratio: 4/3; position: relative;">
+              <img src="https://images.unsplash.com/photo-1611016186353-9af58c69a533?w=800&q=80" alt="Atölye Üretim" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            </div>
+            <div style="border-radius: 20px; overflow: hidden; aspect-ratio: 4/3; position: relative;">
+              <img src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=800&q=80" alt="Stüdyo" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            </div>
+            <div style="border-radius: 20px; overflow: hidden; aspect-ratio: 4/3; position: relative;">
+              <img src="https://images.unsplash.com/photo-1619725002198-6a689b72f41d?w=800&q=80" alt="Karbon Parça" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <footer>
+        <div class="footer-container">
+          <div class="footer-left">
+            <a href="https://maps.google.com/?q=Güven+Sanayi+Sitesi+Saray+Mah.+T+Blok+No:26+Ümraniye/İstanbul" target="_blank">
+              <i class="bi bi-geo-alt-fill" style="color:var(--text);font-size:1.2rem;"></i>
+              Güven Sanayi Sitesi Saray Mah. T Blok No:26 Ümraniye / İstanbul
+            </a>
+          </div>
+          <div class="footer-right">
+            &copy; 2026 DreamStudio &mdash; Tüm hakları saklıdır.
+          </div>
+        </div>
+      </footer>
+    </div>
+
+
+    <!-- VIEW 2: FORM -->
+    <div class="view-screen view-form">
+      <button onclick="goHome()" class="btn-back-home"><i class="bi bi-arrow-left"></i></button>
+
+      <div class="teklif-wrapper">
+        <div class="teklif-box">
+          <h2>Teklif Al</h2>
+          <p class="sub">Birkaç adımda aracınız için özel teklif alın.</p>
+
+          <div class="order-steps">
+            <div class="order-step-dot active" id="step-dot-1"></div>
+            <div class="order-step-dot" id="step-dot-2"></div>
+            <div class="order-step-dot" id="step-dot-3"></div>
+            <div class="order-step-dot" id="step-dot-4"></div>
+            <div class="order-step-dot" id="step-dot-5"></div>
+          </div>
+
+          <form id="orderForm" enctype="multipart/form-data">
+            
+            <!-- ADIM 1 -->
+            <div class="order-panel active" id="panel-1">
+              <h4>İletişim Bilgileriniz</h4>
+              <p class="step-sub">Sizi arayabilmemiz için iletişim bilgilerinizi giriniz.</p>
+              <div class="mb-3">
+                <input type="text" class="form-control" id="f-name" placeholder="Adınız Soyadınız" required>
+                <div class="error-text" id="err-name">Lütfen adınızı giriniz.</div>
+              </div>
+              <div>
+                <input type="tel" class="form-control" id="f-phone" required>
+                <div class="error-text" id="err-phone">Geçerli bir telefon numarası giriniz.</div>
+              </div>
+              <div class="mb-4 mt-3">
+                <input type="email" class="form-control" id="f-email" placeholder="E-posta (Opsiyonel)">
+              </div>
+              <button type="button" class="btn-red" style="width:100%" onclick="validateStep(1)">İleri <i class="bi bi-arrow-right ms-2"></i></button>
+            </div>
+
+            <!-- ADIM 2 -->
+            <div class="order-panel" id="panel-2">
+              <h4>Araç Bilgileri</h4>
+              <p class="step-sub">Hangi araç için işlem yapılacağını belirtiniz.</p>
+              
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <select class="form-control" id="f-year" required>
+                    <option value="" disabled selected>Yıl</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control" id="f-make" required disabled>
+                    <option value="" disabled selected>Marka</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control" id="f-model" required disabled>
+                    <option value="" disabled selected>Model</option>
+                  </select>
+                </div>
+              </div>
+              <div class="error-text" id="err-car" style="margin-bottom:1rem;">Lütfen araç yıl, marka ve modelini seçiniz.</div>
+
+              <div class="mb-4">
+                <input type="text" class="form-control" id="f-plate" placeholder="Plaka (Opsiyonel)">
+              </div>
+              <div class="step-btns">
+                <button type="button" class="btn-ghost" onclick="nextStep(1)"><i class="bi bi-arrow-left me-2"></i> Geri</button>
+                <button type="button" class="btn-red" onclick="validateStep(2)">İleri <i class="bi bi-arrow-right ms-2"></i></button>
+              </div>
+            </div>
+
+            <!-- ADIM 3 -->
+            <div class="order-panel" id="panel-3">
+              <h4>Araç Fotoğrafları</h4>
+              <p class="step-sub">Aracınızın mevcut durumunu görmek fiyatlandırmayı hızlandırır.</p>
+              <div class="photo-upload-grid" id="photoGrid">
+                <% const angles = [
+                  {id:'ph-front', icon:'camera', label:'Ön'},
+                  {id:'ph-back',  icon:'camera', label:'Arka'},
+                  {id:'ph-left',  icon:'camera', label:'Sol'},
+                  {id:'ph-right', icon:'camera', label:'Sağ'},
+                ];
+                angles.forEach(a => { %>
+                  <label class="photo-slot" id="slot-<%= a.id %>">
+                    <input type="file" accept="image/*" id="<%= a.id %>" name="<%= a.id %>" onchange="previewPhoto('<%= a.id %>')" style="display:none">
+                    <div class="photo-slot-inner" id="inner-<%= a.id %>">
+                      <i class="bi bi-<%= a.icon %>"></i>
+                      <span><%= a.label %></span>
+                    </div>
+                  </label>
+                <% }); %>
+                <label class="photo-slot extra-slot">
+                  <input type="file" accept="image/*" multiple id="ph-extra" onchange="previewExtras()" style="display:none">
+                  <div class="photo-slot-inner">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Ekstra</span>
+                  </div>
+                </label>
+              </div>
+              <div class="upload-hint">En az 4 açıdan fotoğraf eklemeniz önerilir.</div>
+              <div class="step-btns mt-4">
+                <button type="button" class="btn-ghost" onclick="nextStep(2)"><i class="bi bi-arrow-left me-2"></i> Geri</button>
+                <button type="button" class="btn-red" onclick="nextStep(4)">İleri <i class="bi bi-arrow-right ms-2"></i></button>
+              </div>
+            </div>
+
+            <!-- ADIM 4 -->
+            <div class="order-panel" id="panel-4">
+              <h4>Hizmet & Paket Seçimi</h4>
+              <p class="step-sub">Aracınız için hangi işlemi ve paketi düşünüyorsunuz?</p>
+              
+              <div id="err-hizmet" class="error-text mb-3 text-center">Lütfen en az bir hizmet ve paket seçiniz.</div>
+              
+              <div style="font-weight: 500; margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--muted);">İşlem Türü</div>
+              <div class="service-opts mb-4">
+                <% const opts = ['Karbon Fiber Kaplama','Plastik 3D İşleme','Bodykit Takımı','Fiber Kit Üretimi','Özel Tasarım'];
+                opts.forEach(opt => { %>
+                  <label class="service-opt" style="padding: 1rem 1.2rem;">
+                    <input type="radio" name="hizmet" value="<%= opt %>">
+                    <span><%= opt %></span>
+                  </label>
+                <% }); %>
+              </div>
+
+              <div style="font-weight: 500; margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--muted);">Tasarım / Üretim Paketi</div>
+              <div class="service-opts mb-4">
+                <% const packages = [
+                  {name:'Tekil Tasarım Paketi', price:'2.000 ₺'},
+                  {name:'Pro Paket', price:'6.000 ₺'},
+                  {name:'VIP Üretim Paketi', price:'15.000 ₺'}
+                ];
+                packages.forEach(pkg => { %>
+                  <label class="service-opt" style="padding: 1.2rem;">
+                    <input type="radio" name="paket" value="<%= pkg.name %>">
+                    <span style="flex:1; margin-left: 0.8rem;"><%= pkg.name %></span>
+                    <span style="font-weight:600; color:var(--text); font-size:1.1rem;"><%= pkg.price %></span>
+                  </label>
+                <% }); %>
+              </div>
+
+              <div class="mb-4">
+                <textarea class="form-control" id="f-note" rows="3" placeholder="Eklemek istedikleriniz..."></textarea>
+              </div>
+              <div class="step-btns">
+                <button type="button" class="btn-ghost" onclick="nextStep(3)"><i class="bi bi-arrow-left me-2"></i> Geri</button>
+                <button type="button" class="btn-red" onclick="validateStep(4)"><i class="bi bi-check2-circle me-2"></i> Gönder</button>
+              </div>
+            </div>
+
+            <!-- ADIM 5 -->
+            <div class="order-panel" id="panel-5">
+              <div style="text-align:center;margin-bottom:2rem;">
+                <div style="width:80px;height:80px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+                  <i class="bi bi-check-lg" style="font-size:2.5rem;color:#000;"></i>
+                </div>
+                <h4 style="font-size:1.8rem;font-weight:400;margin-bottom:0.5rem;letter-spacing:-0.02em;">Talebiniz Alındı</h4>
+                <p style="color:var(--muted);font-weight:300;font-size:1.05rem;">Aşağıdaki ibana ödemenizi tamamlayın, süreci hemen başlatalım.</p>
+              </div>
+              
+              <!-- BANKE BILGILERI KUTUSU -->
+              <div style="background: var(--input-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 0.8rem;">
+                  <span style="color:var(--muted); font-size:0.9rem;">Banka:</span>
+                  <span style="color:var(--text); font-weight:500;">AKBANK ALTUNİZADE</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 0.8rem;">
+                  <span style="color:var(--muted); font-size:0.9rem;">Alıcı:</span>
+                  <span style="color:var(--text); font-weight:500;">CELALETTİN YABUZ</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 1.2rem;">
+                  <span style="color:var(--muted); font-size:0.9rem;">İBAN:</span>
+                  <span style="color:var(--text); font-weight:600; font-family:monospace; font-size:1rem;">TR96 0004 6008 6688 8000 0775 26</span>
+                </div>
+                <div style="background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.2); padding: 1rem; border-radius: 12px; color: #d32f2f; font-size:0.9rem; text-align:center;">
+                  Açıklama Kısmına <strong>Sipariş Takip Kodunuzu</strong> Yazmayı Unutmayınız!
+                </div>
+              </div>
+
+              <div class="tracking-box" style="padding: 2rem 0; margin-bottom: 1.5rem;">
+                <div class="tracking-label">Sipariş Takip Kodu</div>
+                <div class="tracking-code" id="trackingCode"></div>
+                <button type="button" class="copy-btn" onclick="copyCode()">Kodu Kopyala</button>
+              </div>
+              
+              <div class="tracking-link-box" style="margin-top: 1rem;">
+                <a id="trackingLink" href="#" target="_blank">Takip Sayfasına Git <i class="bi bi-arrow-up-right ms-1"></i></a>
+              </div>
+              
+              <div style="text-align:center;margin-top:2rem;">
+                <a href="javascript:void(0)" onclick="goHome()" style="color:var(--muted);text-decoration:none;font-size:0.95rem;transition:color 0.3s;border-bottom:1px solid transparent;padding-bottom:2px;" onmouseover="this.style.color='#000';this.style.borderColor='#000'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='transparent'">Ana Sayfaya Dön</a>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div> <!-- View 2 End -->
+
+    <!-- VIEW 3: PRESS (BASINDA BİZ) -->
+    <div class="view-screen view-press">
+      <button onclick="goHome()" class="btn-back-home"><i class="bi bi-arrow-left"></i></button>
+
+      <div class="teklif-wrapper" style="padding: 5rem 1rem 3rem; display:block;">
+        <div style="max-width: 1100px; margin: 0 auto;">
+          
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 3rem;">
+            <img src="/celal-yabuz.png" alt="Celal Yabuz" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; margin-bottom: 1.5rem; object-position: top;">
+            <h2 style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 300; letter-spacing: -0.03em; margin-bottom: 0.2rem; color: var(--text);">Celal Yabuz</h2>
+            <div style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(--text); margin-bottom: 1.5rem;">30 Senelik Deneyim</div>
+            <p style="color: var(--muted); font-size: 1rem; font-weight: 400; max-width: 600px; line-height: 1.6; letter-spacing: -0.01em;">Otomotiv tasarım vizyoneri ve DreamStudio'nun kurucusu. Hayalleri aerodinamik gerçekliğe dönüştüren isim.</p>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: left;">
+            
+            <div style="padding: 2rem; border-radius: 20px; background: #fafafa; transition: transform 0.4s ease;">
+              <h4 style="font-size: 1.35rem; font-weight: 400; margin-bottom: 1.2rem; color: var(--text); letter-spacing: -0.01em; line-height: 1.4;">"Aerodinamiğin Karbon Fiberle Kusursuz Dansı"</h4>
+              <p style="color: var(--muted); line-height: 1.6; font-size: 1rem; margin-bottom: 2rem; font-weight: 300;">Celal Yabuz'un imzasını taşıyan yeni nesil bodykit konseptleri, sadece estetik değil, aynı zamanda mühendislik harikası bir rüzgar tüneli performansına sahip. DreamStudio'nun bu agresif ama akıcı tasarım dili sektörde yeni bir standart belirliyor.</p>
+              <div style="font-weight: 500; font-size: 0.85rem; color: var(--text); letter-spacing: 1px; text-transform: uppercase;">— Auto & Design Magazine</div>
+            </div>
+
+            <div style="padding: 2rem; border-radius: 20px; background: #fafafa; transition: transform 0.4s ease;">
+              <h4 style="font-size: 1.25rem; font-weight: 500; margin-bottom: 1rem; color: var(--text); letter-spacing: -0.01em; line-height: 1.4;">"Otomobil Kişiselleştirmesinde Bir Vizyoner"</h4>
+              <p style="color: var(--muted); line-height: 1.6; font-size: 0.95rem; margin-bottom: 1.5rem; font-weight: 400;">3D dijital modellemeden, CNC kalıp üretimine kadar uzanan endüstriyel üretim hattını bir stüdyo disipliniyle harmanlayan Yabuz, süper spor otomobil sahiplerinin ilk tercihi haline geldi. Karbon fiberin dokusu onun ellerinde sanata dönüşüyor.</p>
+              <div style="font-weight: 600; font-size: 0.8rem; color: var(--text); letter-spacing: 1px; text-transform: uppercase;">— MotorSport Daily</div>
+            </div>
+
+            <div style="padding: 2rem; border-radius: 20px; background: #fafafa; transition: transform 0.4s ease;">
+              <h4 style="font-size: 1.25rem; font-weight: 500; margin-bottom: 1rem; color: var(--text); letter-spacing: -0.01em; line-height: 1.4;">"Türkiye'den Doğan Global Tasarım Gücü"</h4>
+              <p style="color: var(--muted); line-height: 1.6; font-size: 0.95rem; margin-bottom: 1.5rem; font-weight: 400;">Hayalinizdeki araca ulaşmanın artık eskisi kadar zor olmadığını kanıtlayan DreamStudio, 10 dakika gibi kısa bir sürede sunduğu vizyoner ön cevaplarla kişiye özel üretimi bambaşka bir boyuta taşıyor.</p>
+              <div style="font-weight: 600; font-size: 0.8rem; color: var(--text); letter-spacing: 1px; text-transform: uppercase;">— Tech & Auto Insights</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div> <!-- View 3 End -->
+
+  </div> <!-- Page Slider End -->
+</div> <!-- App Container End -->
+
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@19.2.16/build/js/intlTelInput.min.js"></script>
+<script src="/cookieconsent.umd.js"></script>
+<script>
+  function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    menu.classList.toggle('open');
+  }
+
+  // ── SPA SLIDER MANTIĞI ──
+  function goToForm() {
+    document.getElementById('pageSlider').style.transform = 'translateX(-100vw)';
+    setTimeout(() => {
+      document.querySelector('.view-form').scrollTop = 0;
+    }, 400);
+  }
+
+  function goToPress() {
+    document.getElementById('pageSlider').style.transform = 'translateX(-200vw)';
+    setTimeout(() => {
+      document.querySelector('.view-press').scrollTop = 0;
+    }, 400);
+  }
+
+  function goHome() {
+    document.getElementById('pageSlider').style.transform = 'translateX(0)';
+    setTimeout(() => {
+      // Formu sıfırla
+      document.getElementById('orderForm').reset();
+      nextStep(1);
+    }, 800);
+  }
+
+  // ── FORM MANTIĞI (ÖNCEKİ KODLAR) ──
+  let currentStep = 1;
+  const TOTAL_STEPS = 5;
+  let uploadedPhotos = {};
+  
+  const phoneInput = window.intlTelInput(document.querySelector("#f-phone"), {
+    initialCountry: "tr",
+    preferredCountries: ["tr", "de", "gb", "us"],
+    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@19.2.16/build/js/utils.js",
+    separateDialCode: true,
+    customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
+      return "Örn: " + selectedCountryPlaceholder;
+    },
+  });
+
+  const elYear = document.getElementById('f-year');
+  const elMake = document.getElementById('f-make');
+  const elModel = document.getElementById('f-model');
+
+  const currentYear = new Date().getFullYear();
+  for (let i = currentYear; i >= 1990; i--) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i;
+    elYear.appendChild(opt);
+  }
+
+  elYear.addEventListener('change', async () => {
+    const year = elYear.value;
+    elMake.innerHTML = '<option value="" disabled selected>Yükleniyor...</option>';
+    elMake.disabled = true;
+    elModel.innerHTML = '<option value="" disabled selected>Model</option>';
+    elModel.disabled = true;
+    
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json`);
+      const data = await res.json();
+      elMake.innerHTML = '<option value="" disabled selected>Marka Seçiniz</option>';
+      
+      const sortedMakes = data.Results.sort((a,b) => a.MakeName.localeCompare(b.MakeName));
+      sortedMakes.forEach(make => {
+        const opt = document.createElement('option');
+        opt.value = make.MakeName;
+        opt.textContent = make.MakeName;
+        elMake.appendChild(opt);
+      });
+      elMake.disabled = false;
+    } catch (e) {
+      elMake.innerHTML = '<option value="" disabled selected>Hata oluştu</option>';
+    }
+  });
+
+  elMake.addEventListener('change', async () => {
+    const make = elMake.value;
+    const year = elYear.value;
+    elModel.innerHTML = '<option value="" disabled selected>Yükleniyor...</option>';
+    elModel.disabled = true;
+
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`);
+      const data = await res.json();
+      
+      elModel.innerHTML = '<option value="" disabled selected>Model Seçiniz</option>';
+      
+      if (data.Results.length === 0) {
+        elModel.innerHTML = '<option value="" disabled>Model bulunamadı</option>';
+        const opt = document.createElement('option');
+        opt.value = 'Diğer'; opt.textContent = 'Diğer';
+        elModel.appendChild(opt);
+      } else {
+        const sortedModels = data.Results.sort((a,b) => a.Model_Name.localeCompare(b.Model_Name));
+        sortedModels.forEach(model => {
+          const opt = document.createElement('option');
+          opt.value = model.Model_Name;
+          opt.textContent = model.Model_Name;
+          elModel.appendChild(opt);
+        });
+      }
+      elModel.disabled = false;
+    } catch (e) {
+      elModel.innerHTML = '<option value="" disabled selected>Hata oluştu</option>';
+    }
+  });
+
+  function validateStep(step) {
+    if (step === 1) {
+      const name = document.getElementById('f-name');
+      const phone = document.getElementById('f-phone');
+      let valid = true;
+      if (!name.value.trim()) { name.classList.add('is-invalid'); document.getElementById('err-name').style.display = 'block'; valid = false; }
+      else { name.classList.remove('is-invalid'); document.getElementById('err-name').style.display = 'none'; }
+      
+      if (!phoneInput.isValidNumber()) { phone.classList.add('is-invalid'); document.getElementById('err-phone').style.display = 'block'; valid = false; }
+      else { phone.classList.remove('is-invalid'); document.getElementById('err-phone').style.display = 'none'; }
+      if (valid) nextStep(2);
+    }
+    if (step === 2) {
+      const year = document.getElementById('f-year').value;
+      const make = document.getElementById('f-make').value;
+      const model = document.getElementById('f-model').value;
+      const errCar = document.getElementById('err-car');
+      
+      if (!year || !make || !model) { 
+        errCar.style.display = 'block';
+      } else { 
+        errCar.style.display = 'none';
+        nextStep(3); 
+      }
+    }
+    if (step === 4) {
+      const hizmet = document.querySelector('input[name="hizmet"]:checked');
+      const paket = document.querySelector('input[name="paket"]:checked');
+      if (!hizmet || !paket) { document.getElementById('err-hizmet').style.display = 'block'; }
+      else { document.getElementById('err-hizmet').style.display = 'none'; submitForm(); }
+    }
+  }
+
+  function nextStep(step) {
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const panel = document.getElementById('panel-' + i);
+      const dot   = document.getElementById('step-dot-' + i);
+      if (panel) panel.classList.toggle('active', i === step);
+      if (dot) {
+        dot.classList.remove('active','done');
+        if (i === step) dot.classList.add('active');
+        else if (i < step) dot.classList.add('done');
+      }
+    }
+    currentStep = step;
+    document.querySelector('.view-form').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function submitForm() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('f-name').value || '');
+    formData.append('phone', phoneInput.getNumber() || '');
+    formData.append('email', document.getElementById('f-email').value || '');
+    
+    const year = document.getElementById('f-year').value;
+    const make = document.getElementById('f-make').value;
+    const model = document.getElementById('f-model').value;
+    formData.append('car', `${year} ${make} ${model}`);
+    
+    formData.append('plate', document.getElementById('f-plate').value || '');
+    
+    const hizmet = document.querySelector('input[name="hizmet"]:checked');
+    const paket = document.querySelector('input[name="paket"]:checked');
+    formData.append('service', hizmet ? hizmet.value : '');
+    formData.append('package', paket ? paket.value : '');
+    formData.append('note', document.getElementById('f-note').value || '');
+
+    Object.keys(uploadedPhotos).forEach(key => formData.append(key, uploadedPhotos[key]));
+
+    const btn = document.querySelector('#panel-4 .btn-red');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Gönderiliyor...';
+    btn.disabled = true;
+
+    fetch('/api/order', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('trackingCode').textContent = data.code;
+        const trackUrl = location.origin + '/track?code=' + data.code;
+        document.getElementById('trackingLink').href = trackUrl;
+        nextStep(5);
+      } else {
+        alert('Hata: ' + data.error);
+      }
+    })
+    .catch(err => alert('Bir hata oluştu'))
+    .finally(() => {
+      btn.innerHTML = oldText;
+      btn.disabled = false;
+    });
+  }
+
+  function previewPhoto(id) {
+    const input = document.getElementById(id);
+    const slot = document.getElementById('slot-' + id);
+    const inner = document.getElementById('inner-' + id);
+    if (!input.files[0]) return;
+    const url = URL.createObjectURL(input.files[0]);
+    uploadedPhotos[id] = input.files[0];
+    inner.innerHTML = `<img src="${url}" class="photo-slot-preview"><div class="photo-slot-check"><i class="bi bi-check-lg"></i></div>`;
+    slot.classList.add('has-photo');
+  }
+
+  function previewExtras() {
+    const input = document.getElementById('ph-extra');
+    Array.from(input.files).forEach((f,i) => { uploadedPhotos['extra-'+i] = f; });
+    document.querySelector('.extra-slot').style.borderColor = '#000';
+  }
+
+  function copyCode() {
+    const code = document.getElementById('trackingCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.innerHTML = 'Kopyalandı <i class="bi bi-check-lg ms-1"></i>';
+      setTimeout(() => { btn.innerHTML = 'Kodu Kopyala'; }, 2000);
+    });
+  }
+
+  // ── DİĞER FONKSİYONLAR ──
+  CookieConsent.run({
+    guiOptions: { consentModal: { layout: 'box', position: 'bottom left', equalWeightButtons: false, flipButtons: false } },
+    categories: { necessary: { enabled: true, readOnly: true }, analytics: {} },
+    language: {
+      default: 'tr',
+      translations: {
+        tr: {
+          consentModal: { title: 'Çerez Bildirimi', description: 'Bu site deneyiminizi geliştirmek için çerezler kullanır.', acceptAllBtn: 'Kabul Et', rejectAllBtn: 'Reddet', showPreferencesBtn: null },
+          preferencesModal: { title: 'Çerez Tercihleri', acceptAllBtn: 'Tümünü Kabul Et', rejectAllBtn: 'Tümünü Reddet', savePreferencesBtn: 'Kaydet', sections: [ { title: 'Zorunlu Çerezler', description: 'Gerekli.', linkedCategory: 'necessary' }, { title: 'Analitik Çerezler', description: 'Kullanım.', linkedCategory: 'analytics' } ] }
+        }
+      }
+    }
+  });
+
+  const glow = document.getElementById('cursorGlow');
+  document.addEventListener('mousemove', e => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top  = e.clientY + 'px';
+  });
+</script>
+</body>
+</html>
