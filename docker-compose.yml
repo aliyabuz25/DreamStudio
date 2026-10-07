@@ -5,8 +5,6 @@ networks:
     external: true
   octobot-net:
     external: true
-  internal:
-    internal: true
 
 volumes:
   celalyabuz-ds-db:
@@ -26,10 +24,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      HOST: 0.0.0.0
       WA_SERVER_URL: http://celalyabuz-ds-wa:3001
       SITE_URL: https://celalyabuz.store
-      ADMIN_PHONE: ${ADMIN_PHONE:-905464233871}
+      ADMIN_PHONE: "905464233871"
     volumes:
       - celalyabuz-ds-db:/app/admin/db
       - celalyabuz-ds-uploads:/app/admin/uploads
@@ -39,7 +36,6 @@ services:
     networks:
       - edge
       - octobot-net
-      - internal
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=edge"
@@ -60,4 +56,3 @@ services:
       - celalyabuz-ds-auth:/app/admin/auth_info
     networks:
       - octobot-net
-      - internal
