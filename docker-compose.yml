@@ -2,7 +2,8 @@ version: "3.8"
 
 networks:
   proxy:
-    external: true
+    external: false
+    driver: bridge
   internal:
     internal: true
 
