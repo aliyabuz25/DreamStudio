@@ -1,0 +1,9 @@
+node_modules/
+admin/auth_info/
+admin/db/
+.git/
+.env
+*.log
+*.db
+*.db-shm
+*.db-wal

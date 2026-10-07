@@ -1,0 +1,94 @@
+version: '3.8'
+
+networks:
+  proxy:
+    external: true
+  internal:
+    internal: true
+
+volumes:
+  dreamstudio-db:
+  dreamstudio-uploads:
+  dreamstudio-auth:
+
+services:
+
+  # ── TRAEFIK ──────────────────────────────────────────
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=proxy"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik-certs:/letsencrypt"
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=le"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=traefik-auth"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_AUTH}"
+
+  # ── DREAMSTUDIO WEB ───────────────────────────────────
+  dreamstudio-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dreamstudio-web
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - WA_SERVER_URL=http://dreamstudio-wa:3001
+      - SITE_URL=https://${DOMAIN}
+    volumes:
+      - dreamstudio-db:/app/admin/db
+      - dreamstudio-uploads:/app/admin/uploads
+      - dreamstudio-uploads:/app/public/uploads
+    depends_on:
+      - dreamstudio-wa
+    networks:
+      - proxy
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dreamstudio.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.dreamstudio.entrypoints=websecure"
+      - "traefik.http.routers.dreamstudio.tls.certresolver=le"
+      - "traefik.http.services.dreamstudio.loadbalancer.server.port=3000"
+
+  # ── DREAMSTUDIO WHATSAPP ─────────────────────────────
+  dreamstudio-wa:
+    build:
+      context: .
+      dockerfile: Dockerfile.wa
+    container_name: dreamstudio-wa
+    restart: unless-stopped
+    volumes:
+      - dreamstudio-auth:/app/admin/auth_info
+    networks:
+      - internal
+    # WA sunucusu dışarıya açılmaz, sadece internal network üzerinden erişilir
+
+volumes:
+  traefik-certs:
