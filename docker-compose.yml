@@ -7,9 +7,9 @@ networks:
     internal: true
 
 volumes:
-  dreamstudio-db:
-  dreamstudio-uploads:
-  dreamstudio-auth:
+  celalyabuz-ds-db:
+  celalyabuz-ds-uploads:
+  celalyabuz-ds-auth:
   traefik-certs:
 
 services:
@@ -56,19 +56,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: dreamstudio-web:latest
-    container_name: dreamstudio-web
+    image: celalyabuz-ds:latest
+    container_name: celalyabuz-ds
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - WA_SERVER_URL=http://dreamstudio-wa:3001
+      - WA_SERVER_URL=http://celalyabuz-ds-wa:3001
       - SITE_URL=https://celalyabuz.store
       - ADMIN_PHONE=${ADMIN_PHONE:-905464233871}
     volumes:
-      - dreamstudio-db:/app/admin/db
-      - dreamstudio-uploads:/app/admin/uploads
-      - dreamstudio-uploads:/app/public/uploads
+      - celalyabuz-ds-db:/app/admin/db
+      - celalyabuz-ds-uploads:/app/admin/uploads
+      - celalyabuz-ds-uploads:/app/public/uploads
     depends_on:
       - dreamstudio-wa
     networks:
@@ -76,28 +76,25 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      # Ana site
-      - "traefik.http.routers.dreamstudio.rule=Host(`celalyabuz.store`) || Host(`www.celalyabuz.store`)"
-      - "traefik.http.routers.dreamstudio.entrypoints=websecure"
-      - "traefik.http.routers.dreamstudio.tls=true"
-      - "traefik.http.routers.dreamstudio.tls.certresolver=le"
-      - "traefik.http.services.dreamstudio.loadbalancer.server.port=3000"
-      # www → non-www redirect
+      - "traefik.http.routers.celalyabuz-ds.rule=Host(`celalyabuz.store`) || Host(`www.celalyabuz.store`)"
+      - "traefik.http.routers.celalyabuz-ds.entrypoints=websecure"
+      - "traefik.http.routers.celalyabuz-ds.tls=true"
+      - "traefik.http.routers.celalyabuz-ds.tls.certresolver=le"
+      - "traefik.http.services.celalyabuz-ds.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.celalyabuz\\.store/(.*)"
       - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://celalyabuz.store/$${1}"
       - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
-      - "traefik.http.routers.dreamstudio.middlewares=www-redirect"
+      - "traefik.http.routers.celalyabuz-ds.middlewares=www-redirect"
 
   # ── DREAMSTUDIO WHATSAPP ─────────────────────────────
   dreamstudio-wa:
     build:
       context: .
       dockerfile: Dockerfile.wa
-    image: dreamstudio-wa:latest
-    container_name: dreamstudio-wa
+    image: celalyabuz-ds-wa:latest
+    container_name: celalyabuz-ds-wa
     restart: unless-stopped
     volumes:
-      - dreamstudio-auth:/app/admin/auth_info
+      - celalyabuz-ds-auth:/app/admin/auth_info
     networks:
       - internal
-    # WA sunucusu dışarıya açılmaz, sadece internal network üzerinden erişilir
