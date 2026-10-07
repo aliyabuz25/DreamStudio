@@ -15,6 +15,16 @@ volumes:
 
 services:
 
+  # ── CLOUDFLARE TUNNEL ────────────────────────────────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: celalyabuz-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - edge
+      - octobot-net
+
   # ── DREAMSTUDIO WEB ───────────────────────────────────
   dreamstudio-web:
     container_name: celalyabuz-ds
