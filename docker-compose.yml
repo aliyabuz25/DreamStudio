@@ -10,6 +10,7 @@ volumes:
   dreamstudio-db:
   dreamstudio-uploads:
   dreamstudio-auth:
+  traefik-certs:
 
 services:
 
@@ -28,8 +29,9 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--certificatesresolvers.le.acme.tlschallenge=true"
-      - "--certificatesresolvers.le.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.le.acme.email=info@celalyabuz.store"
       - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
       - "--log.level=INFO"
     ports:
@@ -42,7 +44,7 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.celalyabuz.store`)"
       - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
       - "traefik.http.routers.traefik-dashboard.tls.certresolver=le"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
@@ -54,13 +56,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: dreamstudio-web:latest
     container_name: dreamstudio-web
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=3000
       - WA_SERVER_URL=http://dreamstudio-wa:3001
-      - SITE_URL=https://${DOMAIN}
+      - SITE_URL=https://celalyabuz.store
+      - ADMIN_PHONE=${ADMIN_PHONE:-905464233871}
     volumes:
       - dreamstudio-db:/app/admin/db
       - dreamstudio-uploads:/app/admin/uploads
@@ -72,16 +76,24 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dreamstudio.rule=Host(`${DOMAIN}`)"
+      # Ana site
+      - "traefik.http.routers.dreamstudio.rule=Host(`celalyabuz.store`) || Host(`www.celalyabuz.store`)"
       - "traefik.http.routers.dreamstudio.entrypoints=websecure"
+      - "traefik.http.routers.dreamstudio.tls=true"
       - "traefik.http.routers.dreamstudio.tls.certresolver=le"
       - "traefik.http.services.dreamstudio.loadbalancer.server.port=3000"
+      # www → non-www redirect
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.celalyabuz\\.store/(.*)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://celalyabuz.store/$${1}"
+      - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
+      - "traefik.http.routers.dreamstudio.middlewares=www-redirect"
 
   # ── DREAMSTUDIO WHATSAPP ─────────────────────────────
   dreamstudio-wa:
     build:
       context: .
       dockerfile: Dockerfile.wa
+    image: dreamstudio-wa:latest
     container_name: dreamstudio-wa
     restart: unless-stopped
     volumes:
@@ -89,6 +101,3 @@ services:
     networks:
       - internal
     # WA sunucusu dışarıya açılmaz, sadece internal network üzerinden erişilir
-
-volumes:
-  traefik-certs:
