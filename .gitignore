@@ -6,4 +6,4 @@ public/uploads/
 *.db-shm
 *.db-wal
 .env
-.DS_Store
+.DS_Storeelecar/
