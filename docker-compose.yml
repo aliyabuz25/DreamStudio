@@ -60,4 +60,5 @@ services:
     volumes:
       - celalyabuz-ds-auth:/app/admin/auth_info
     networks:
+      - octobot-net
       - internal
