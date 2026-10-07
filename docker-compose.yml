@@ -1,7 +1,9 @@
 version: "3.8"
 
 networks:
-  proxy:
+  edge:
+    external: true
+  octobot-net:
     external: true
   internal:
     internal: true
@@ -35,11 +37,12 @@ services:
     depends_on:
       - dreamstudio-wa
     networks:
-      - proxy
+      - edge
+      - octobot-net
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
+      - "traefik.docker.network=edge"
       - "traefik.http.routers.celalyabuz-ds.rule=Host(`celalyabuz.store`)"
       - "traefik.http.routers.celalyabuz-ds.entrypoints=websecure"
       - "traefik.http.routers.celalyabuz-ds.tls=true"
