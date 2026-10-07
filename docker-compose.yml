@@ -1,9 +1,10 @@
 version: "3.8"
 
 networks:
-  proxy:
-    external: false
-    driver: bridge
+  edge:
+    external: true
+  octobot-net:
+    external: true
   internal:
     internal: true
 
@@ -16,46 +17,47 @@ services:
 
   # ── DREAMSTUDIO WEB ───────────────────────────────────
   dreamstudio-web:
+    container_name: celalyabuz-ds
     build:
       context: .
       dockerfile: Dockerfile
     image: celalyabuz-ds:latest
     pull_policy: build
-    container_name: celalyabuz-ds
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      PORT: 3000
-      WA_SERVER_URL: http://celalyabuz-ds-wa:3001
-      SITE_URL: https://celalyabuz.store
-      ADMIN_PHONE: ${ADMIN_PHONE:-905464233871}
+      NODE_ENV: "production"
+      PORT: "3000"
+      WA_SERVER_URL: "http://celalyabuz-ds-wa:3001"
+      SITE_URL: "https://celalyabuz.store"
+      ADMIN_PHONE: "${ADMIN_PHONE:-905464233871}"
     volumes:
-      - celalyabuz-ds-db:/app/admin/db
-      - celalyabuz-ds-uploads:/app/admin/uploads
-      - celalyabuz-ds-uploads:/app/public/uploads
+      - /datastore/celalyabuz/db:/app/admin/db
+      - /datastore/celalyabuz/uploads:/app/admin/uploads
+      - /datastore/celalyabuz/uploads:/app/public/uploads
     depends_on:
       - dreamstudio-wa
     networks:
-      - proxy
+      - edge
+      - octobot-net
       - internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=edge"
       - "traefik.http.routers.celalyabuz-ds.rule=Host(`celalyabuz.store`)"
-      - "traefik.http.routers.celalyabuz-ds.entrypoints=websecure"
+      - "traefik.http.routers.celalyabuz-ds.entrypoints=web,websecure"
       - "traefik.http.routers.celalyabuz-ds.tls=true"
-      - "traefik.http.routers.celalyabuz-ds.tls.certresolver=le"
       - "traefik.http.services.celalyabuz-ds.loadbalancer.server.port=3000"
 
   # ── DREAMSTUDIO WHATSAPP ─────────────────────────────
   dreamstudio-wa:
+    container_name: celalyabuz-ds-wa
     build:
       context: .
       dockerfile: Dockerfile.wa
     image: celalyabuz-ds-wa:latest
     pull_policy: build
-    container_name: celalyabuz-ds-wa
     restart: unless-stopped
     volumes:
-      - celalyabuz-ds-auth:/app/admin/auth_info
+      - /datastore/celalyabuz/auth:/app/admin/auth_info
     networks:
       - internal
