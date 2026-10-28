@@ -1,0 +1,201 @@
+<%- include('partials/header') %>
+
+<header class="app-topbar">
+  <div class="topbar-left">
+    <button class="btn btn-link text-dark p-0 text-decoration-none d-flex align-items-center gap-1" onclick="window.location.href='/'">
+      <i class="bi bi-chevron-left fs-5"></i>
+      <span style="font-size: 15px;">Geri</span>
+    </button>
+  </div>
+  <div class="topbar-title"></div>
+  <div class="topbar-right"></div>
+</header>
+
+<main class="app-content pb-4">
+  <script>
+    if (localStorage.getItem('dw_waitlist')) {
+      window.location.href = '/'; 
+    }
+  </script>
+
+  <div class="swiftui-header pb-2 pt-4">
+    <h1 class="swiftui-title">Yeni Tasarım</h1>
+  </div>
+
+  <% const uploadedCount = Object.keys(session.images).length; %>
+
+  <!-- Clean Step Indicator -->
+  <div class="px-4 mb-2">
+    <div class="step-indicator" style="justify-content: flex-start;">
+      <div class="step-dot <%= uploadedCount >= 1 ? 'active' : '' %>"></div>
+      <div class="step-dot <%= uploadedCount >= 2 ? 'active' : '' %>"></div>
+      <div class="step-dot <%= uploadedCount >= 3 ? 'active' : '' %>"></div>
+      <div class="step-dot <%= uploadedCount >= 4 ? 'active' : '' %>"></div>
+      <div class="step-dot <%= uploadedCount === 5 ? 'active' : '' %>"></div>
+    </div>
+    <p class="text-secondary fw-medium" style="font-size: 14px;">Lütfen 5 açıyı tamamlayın</p>
+  </div>
+
+  <!-- Upload Grid -->
+  <div class="upload-grid mt-2">
+    <% positions.forEach((pos, idx) => { %>
+      <% const isUploaded = session.images[pos.key] ? true : false; %>
+      <div class="upload-card <%= idx === 4 ? 'wide' : '' %> <%= isUploaded ? 'uploaded' : '' %>" onclick="triggerUpload('<%= pos.key %>')">
+        <% if (isUploaded) { %>
+          <img src="<%= session.images[pos.key].path %>" alt="<%= pos.key %>">
+          <div class="upload-overlay-check"><i class="bi bi-check"></i></div>
+        <% } else { %>
+          <i class="bi <%= pos.icon === 'md-car' ? 'bi-car-front' : 'bi-camera' %>"></i>
+          <span><%= pos.label %></span>
+        <% } %>
+        <input type="file" accept="image/*" capture="environment" id="file-<%= pos.key %>" class="d-none" onchange="handleUpload('<%= pos.key %>', this)">
+      </div>
+    <% }); %>
+  </div>
+
+  <!-- Action Area -->
+  <div class="p-4 mt-2">
+    <% const allUploaded = uploadedCount === 5; %>
+    <button class="btn-primary-app" id="analyze-btn" 
+            onclick="confirmOrder()" 
+            <%= !allUploaded ? 'disabled' : '' %>>
+      Siparişi Başlat (2000 ₺)
+    </button>
+  </div>
+
+</main>
+
+<!-- Delivery & AI Result Modal -->
+<div class="position-fixed inset-0 bg-white" id="order-flow-view" style="display: none; top: var(--topbar-height); bottom: 0; left: 0; right: 0; z-index: 1040; overflow-y:auto">
+  <div class="p-4 pt-3">
+    <div class="status-icon-wrap bg-transparent mb-1" style="width: 50px; height: 50px; margin: 0 auto;">
+      <i class="bi bi-check-circle text-primary fs-2"></i>
+    </div>
+    <h2 class="fw-bold fs-4 mb-1 text-center">Analiz Başarılı</h2>
+    <p class="text-secondary text-center small" id="ai-result-text">Model tespit edildi ve onaya hazır.</p>
+    
+    <div class="list-group-app mb-3 mt-3">
+      <div class="list-group-item-app">
+        <span class="text-secondary small">Marka / Model</span>
+        <span class="fw-medium text-primary small" id="ai-brand-model">-</span>
+      </div>
+    </div>
+
+    <div class="ios-list-header px-0 mb-2 mt-4">TESLİMAT YÖNTEMİNİ SEÇİN</div>
+    <div class="ios-list mx-0">
+      <div class="ios-list-item selected" id="opt-gelal" onclick="selectDelivery('gelal')">
+        <div class="bank-option">
+          <div class="bank-logo-wrap bg-light"><i class="bi bi-shop text-primary"></i></div>
+          <div>
+            <div class="bank-name">GelAl Noktası</div>
+            <div class="bank-fee">Stüdyodan Teslim (Ücretsiz)</div>
+          </div>
+        </div>
+        <i class="bi bi-check2 bank-check"></i>
+      </div>
+
+      <div class="ios-list-item" id="opt-kargo" onclick="selectDelivery('kargo')">
+        <div class="bank-option">
+          <div class="bank-logo-wrap bg-light"><i class="bi bi-truck text-primary"></i></div>
+          <div>
+            <div class="bank-name">Adrese Kargo</div>
+            <div class="bank-fee">Standart Teslimat (Ücretsiz)</div>
+          </div>
+        </div>
+        <i class="bi bi-check2 bank-check"></i>
+      </div>
+    </div>
+
+    <button class="btn-primary-app mt-4" onclick="completeOrder()">
+      Tasarımı Onayla ve Beklemeye Geç
+    </button>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay d-none" id="loading-overlay">
+  <div class="spinner-border text-primary mb-2" style="width: 2rem; height: 2rem; border-width: 0.15rem;" role="status"></div>
+  <div class="fw-bold fs-6">Yapay Zeka İnceliyor</div>
+  <div class="text-secondary mt-1" style="font-size: 12px;">Lütfen bekleyin...</div>
+</div>
+
+<script>
+let selectedDelivery = 'gelal';
+const bakiye = <%= credits %>;
+
+function triggerUpload(posKey) {
+  document.getElementById('file-' + posKey).click();
+}
+
+function handleUpload(posKey, input) {
+  if (!input.files || !input.files[0]) return;
+  
+  const formData = new FormData();
+  formData.append('image', input.files[0]);
+
+  fetch('/analyze/upload/' + posKey, {
+    method: 'POST',
+    body: formData
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      window.location.reload();
+    }
+  });
+}
+
+function confirmOrder() {
+  if (bakiye < 2000) {
+    alert("Yetersiz bakiye. Tasarım siparişi için 2000 ₺ gereklidir. Lütfen Bakiye sekmesinden yükleme yapın.");
+    return;
+  }
+  
+  const isConfirmed = confirm("Siparişi başlatmak için hesabınızdan 2000 ₺ düşülecektir. Onaylıyor musunuz?");
+  if (isConfirmed) {
+    runAnalysis();
+  }
+}
+
+function runAnalysis() {
+  document.getElementById('loading-overlay').classList.remove('d-none');
+
+  fetch('/analyze/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('loading-overlay').classList.add('d-none');
+    
+    if (data.success) {
+      document.getElementById('order-flow-view').style.display = 'block';
+      const result = data.result;
+      document.getElementById('ai-brand-model').textContent = `${result.marka || '-'} ${result.model || ''}`;
+    } else {
+      alert(data.error || 'Analiz başarısız');
+    }
+  })
+  .catch(err => {
+    document.getElementById('loading-overlay').classList.add('d-none');
+    alert('Bağlantı hatası: ' + err.message);
+  });
+}
+
+function selectDelivery(type) {
+  selectedDelivery = type;
+  document.querySelectorAll('.ios-list-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('opt-' + type).classList.add('selected');
+}
+
+function completeOrder() {
+  localStorage.setItem('dw_waitlist', JSON.stringify({
+    date: new Date().toISOString(),
+    deliveryType: selectedDelivery,
+    status: 'waiting'
+  }));
+  window.location.href = '/';
+}
+</script>
+
+<%- include('partials/footer') %>

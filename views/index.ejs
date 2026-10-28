@@ -1,0 +1,617 @@
+<%- include('partials/header') %>
+
+<!-- Language Bubble -->
+<div class="lang-bubble" onclick="toggleLang()">
+  <img src="https://hatscripts.github.io/circle-flags/flags/tr.svg" id="flag-icon" alt="Lang">
+</div>
+<div class="lang-menu" id="lang-menu">
+  <div class="lang-item selected" onclick="setLang('tr', 'tr')">Türkçe <i class="bi bi-check"></i></div>
+  <div class="lang-item" onclick="setLang('en', 'gb')">English <i></i></div>
+  <div class="lang-item" onclick="setLang('ru', 'ru')">Русский <i></i></div>
+</div>
+
+<!-- SCROLL AREA (Ana İçerik) -->
+<div class="scroll-area" id="main-scroll" style="width: 100%; box-sizing: border-box; overflow-x: hidden;">
+  
+  <!-- ===============================
+       TAB 1: STUDIO (Ana Sayfa)
+       =============================== -->
+  <div class="tab-content active w-full box-border" id="tab-studio">
+    <div class="pt-16 pb-2 px-4">
+      <h1 class="text-4xl font-extrabold tracking-tight" data-i18n="studio">Stüdyo</h1>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="px-4 py-2 flex gap-3 w-full box-border" style="overflow-x: hidden;">
+      <div class="flex-1 bg-black text-white rounded-2xl p-3 shadow-soft min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center mb-2"><i class="bi bi-wallet2"></i></div>
+        <div class="text-lg font-extrabold leading-none truncate"><%= credits %>₺</div>
+        <div class="text-[10px] font-semibold opacity-70 mt-1" data-i18n="balance">Bakiye</div>
+      </div>
+      <div class="flex-1 bg-white rounded-2xl p-3 shadow-soft border border-gray-100 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-gray-100 text-black flex items-center justify-center mb-2"><i class="bi bi-box-seam"></i></div>
+        <div class="text-lg font-extrabold leading-none truncate" id="stat-orders">0</div>
+        <div class="text-[10px] font-semibold text-gray-500 mt-1" data-i18n="orders">Sipariş</div>
+      </div>
+      <div class="flex-1 bg-white rounded-2xl p-3 shadow-soft border border-gray-100 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-2"><i class="bi bi-check-circle"></i></div>
+        <div class="text-lg font-extrabold leading-none truncate">0</div>
+        <div class="text-[10px] font-semibold text-gray-500 mt-1" data-i18n="completed">Üretilen</div>
+      </div>
+    </div>
+
+    <div class="ios-list-header" data-i18n="celal_designs">Usta İşi Tasarımlar</div>
+    <div class="ios-list shadow-soft border border-gray-100">
+      <div class="p-4 flex gap-4 items-center">
+        <img src="/celal.jpeg" class="w-16 h-16 rounded-full object-cover shadow-sm">
+        <div>
+          <h4 class="font-bold text-base m-0">Celal Yabuz</h4>
+          <p class="text-[13px] text-gray-500 leading-tight mt-1" data-i18n="celal_desc">Yapay zeka yalnızca aracınızın ölçülerini çıkarır. Asıl tasarım ustamız Celal Yabuz tarafından tamamen el işçiliği ile üretilir.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-list-header" data-i18n="design_process">TASARIM SÜRECİ</div>
+    <div class="ios-list shadow-soft border border-gray-100">
+      <div class="ios-item" onclick="switchTab('design')">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center"><i class="bi bi-magic"></i></div>
+          <span class="font-bold" data-i18n="start_design_btn">Yeni Tasarım Başlat</span>
+        </div>
+        <i class="bi bi-chevron-right text-gray-300"></i>
+      </div>
+    </div>
+
+    <!-- Featured Slider -->
+    <div class="ios-list-header mt-4" data-i18n="popular_kits">Popüler Body Kit'ler</div>
+    <div class="h-slider">
+      <div class="h-card bg-black rounded-2xl overflow-hidden relative shadow-soft h-[140px]">
+        <img src="/fiat-egea.jpeg" class="absolute inset-0 w-full h-full object-cover opacity-60">
+        <div class="absolute bottom-0 left-0 p-4">
+          <h4 class="text-white font-bold text-lg leading-tight">Fiat Egea</h4>
+          <p class="text-white/80 text-xs font-medium">Plastik & Karbon Fiber Kit</p>
+        </div>
+      </div>
+      <div class="h-card bg-black rounded-2xl overflow-hidden relative shadow-soft h-[140px]">
+        <img src="/mazda-323-hb.jpeg" class="absolute inset-0 w-full h-full object-cover opacity-60">
+        <div class="absolute bottom-0 left-0 p-4">
+          <h4 class="text-white font-bold text-lg leading-tight">Mazda 323 Hatchback</h4>
+          <p class="text-white/80 text-xs font-medium">Fiber veya Plastik Kit</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===============================
+       TAB 2: DESIGN (Yeni Tasarım)
+       =============================== -->
+  <div class="tab-content" id="tab-design">
+    <div class="pt-16 pb-2 px-4 flex justify-between items-end">
+      <h1 class="text-4xl font-extrabold tracking-tight" data-i18n="new_design">Tasarım</h1>
+      <button class="text-red-500 font-semibold text-[15px] pb-1" onclick="resetDesign()" data-i18n="clear">Temizle</button>
+    </div>
+
+    <% 
+      const uploadedKeys = Object.keys(session.images || {});
+      const requiredKeys = ['front', 'rear', 'side'];
+      const uploadedRequiredCount = requiredKeys.filter(k => uploadedKeys.includes(k)).length;
+    %>
+
+    <div class="px-4 mb-4">
+      <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+        <div class="bg-black h-full transition-all duration-300" style="width: <%= (uploadedRequiredCount / 3) * 100 %>%"></div>
+      </div>
+      <p class="text-[13px] text-gray-500 font-medium mt-2" data-i18n="required_pics">Lütfen 3 temel açıyı tamamlayın (Ön, Arka, Yan)</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 px-4">
+      <% positions.forEach((pos, idx) => { %>
+        <% const isUploaded = session.images && session.images[pos.key] ? true : false; %>
+        <div class="upload-card <%= idx === 3 ? 'col-span-2 aspect-[2.5/1]' : '' %>" onclick="triggerUpload('<%= pos.key %>')">
+          <% if (isUploaded) { %>
+            <img src="<%= session.images[pos.key].path %>">
+            <div class="upload-check"><i class="bi bi-check"></i></div>
+          <% } else { %>
+            <i class="bi <%= pos.icon %> text-3xl text-gray-300 mb-2"></i>
+            <span class="text-xs font-bold text-gray-500"><%= pos.label %></span>
+            <span class="text-[10px] text-gray-400 mt-1"><%= pos.description %></span>
+          <% } %>
+          <input type="file" accept="image/*" capture="environment" id="file-<%= pos.key %>" class="hidden" onchange="handleUpload('<%= pos.key %>', this)">
+        </div>
+      <% }); %>
+    </div>
+
+    <div class="p-4 mt-4">
+      <% const isReady = uploadedRequiredCount >= 3; %>
+      <button class="w-full h-[52px] rounded-xl font-bold text-[17px] transition-all flex items-center justify-center <%= isReady ? 'bg-black text-white shadow-float active:scale-95' : 'bg-gray-200 text-gray-400' %>" 
+              <%= !isReady ? 'disabled' : '' %> onclick="confirmOrder()">
+        <span data-i18n="start_order">Siparişi Başlat</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===============================
+       TAB 3: ORDERS (Siparişlerim)
+       =============================== -->
+  <div class="tab-content" id="tab-orders">
+    <div class="pt-16 pb-4 px-4">
+      <h1 class="text-4xl font-extrabold tracking-tight" data-i18n="orders">Siparişler</h1>
+    </div>
+
+    <!-- Active Order Tracker -->
+    <div id="waitlist-container" class="hidden px-4">
+      <div class="bg-white rounded-2xl p-6 shadow-soft text-center border border-gray-100 mb-6">
+        <div class="w-16 h-16 rounded-full bg-black text-white mx-auto flex items-center justify-center text-3xl mb-4"><i class="bi bi-car-front"></i></div>
+        <h3 class="font-extrabold text-xl mb-1" data-i18n="status_preparing">Tasarım Hazırlanıyor</h3>
+        <p class="text-gray-500 text-sm">Siparişiniz alındı. En kısa sürede size geri dönüş yapacağız.</p>
+      </div>
+
+      <div class="ios-list-header px-0" data-i18n="order_detail">SİPARİŞ DETAYI</div>
+      <div class="ios-list mx-0 shadow-soft border border-gray-100 mb-6">
+        <div class="ios-item">
+          <span class="text-gray-500 font-medium" data-i18n="status_label">Durum</span>
+          <span class="font-bold text-orange-500" data-i18n="status_val">Üretimde</span>
+        </div>
+        <div class="ios-item">
+          <span class="text-gray-500 font-medium" data-i18n="delivery_label">Teslimat Şekli</span>
+          <span class="font-bold text-black" id="saved-delivery-type">-</span>
+        </div>
+        <div class="ios-item">
+          <span class="text-gray-500 font-medium" data-i18n="timeLeft_label">Kalan Süre</span>
+          <span class="font-bold text-black" data-i18n="timeLeft_val">5 Gün</span>
+        </div>
+      </div>
+
+      <button class="w-full text-center text-red-500 font-bold py-3" onclick="cancelOrder()" data-i18n="cancel_btn">Siparişi İptal Et</button>
+    </div>
+
+    <!-- No Order -->
+    <div id="no-order-container" class="text-center pt-20 px-4">
+      <i class="bi bi-bag text-6xl text-gray-300 block mb-4"></i>
+      <h3 class="font-extrabold text-2xl mb-2" data-i18n="no_order_title">Sipariş Yok</h3>
+      <p class="text-gray-500 text-[15px]" data-i18n="no_order_desc">Henüz aktif bir tasarım siparişiniz bulunmamaktadır.</p>
+    </div>
+  </div>
+
+  <!-- ===============================
+       TAB 4: WALLET (Bakiye)
+       =============================== -->
+  <div class="tab-content" id="tab-wallet">
+    <div class="pt-16 pb-2 px-4">
+      <h1 class="text-4xl font-extrabold tracking-tight" data-i18n="balance">Bakiye</h1>
+    </div>
+    
+    <div class="px-4 mb-6">
+      <div class="bg-gradient-to-br from-black to-gray-800 rounded-3xl p-6 text-white shadow-float relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full"></div>
+        <div class="text-xs font-semibold text-white/60 tracking-wider mb-2" data-i18n="total_balance">TOPLAM BAKİYE</div>
+        <div class="flex items-baseline gap-1">
+          <div class="text-5xl font-extrabold tracking-tight"><%= credits %></div>
+          <div class="text-2xl font-semibold text-white/80">₺</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-list-header" data-i18n="deposit_title">HAVALE/EFT İLE YÜKLE</div>
+    <div class="flex gap-3 overflow-x-auto pb-4 px-4 w-full" style="scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;">
+      <!-- Garanti -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-3 min-w-[110px] flex flex-col items-center justify-center text-center shadow-sm" style="scroll-snap-align: start;">
+        <img src="https://api.puanla.co/images/garanti-bbva.jpg" class="w-10 h-10 object-contain rounded-lg mb-2">
+        <div class="font-bold text-[13px] leading-tight">Garanti BBVA</div>
+        <div class="text-[10px] text-gray-500 leading-tight mt-1"><span data-i18n="free_transfer">Havale Ücretsiz</span><br>EFT: 2.14₺</div>
+      </div>
+      <!-- Ziraat -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-3 min-w-[110px] flex flex-col items-center justify-center text-center shadow-sm" style="scroll-snap-align: start;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Ziraat_Bankas%C4%B1_logo.png?utm_source=tr.wikipedia.org&utm_campaign=index&utm_content=original" class="w-10 h-10 object-contain rounded-lg mb-2">
+        <div class="font-bold text-[13px] leading-tight">Ziraat Bankası</div>
+        <div class="text-[10px] text-gray-500 leading-tight mt-1"><span data-i18n="free_transfer">Havale Ücretsiz</span><br>EFT: 1.14₺</div>
+      </div>
+      <!-- YKB -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-3 min-w-[110px] flex flex-col items-center justify-center text-center shadow-sm" style="scroll-snap-align: start;">
+        <img src="https://pbs.twimg.com/profile_images/1943695644075360256/nNrWI3l4_400x400.jpg" class="w-10 h-10 object-contain rounded-lg mb-2">
+        <div class="font-bold text-[13px] leading-tight">Yapı Kredi</div>
+        <div class="text-[10px] text-gray-500 leading-tight mt-1"><span data-i18n="all_transfers">Tüm işlemler</span><br>1.50₺</div>
+      </div>
+      <!-- Halkbank -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-3 min-w-[110px] flex flex-col items-center justify-center text-center shadow-sm" style="scroll-snap-align: start;">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZ_R4xN8p5TipU6fjLoeerjTBrlhyylUU6f0BlzANOqZS4KWLq44A_4gU&s=10" class="w-10 h-10 object-contain rounded-lg mb-2">
+        <div class="font-bold text-[13px] leading-tight">HalkBank</div>
+        <div class="text-[10px] text-gray-500 leading-tight mt-1"><span data-i18n="free_transfer">Havale Ücretsiz</span><br>EFT: 1.00₺</div>
+      </div>
+    </div>
+
+    <div class="ios-list-header" data-i18n="receiver_info">ALICI BİLGİLERİ</div>
+    <div class="ios-list shadow-soft border border-gray-100 mb-2">
+      <div class="ios-item" onclick="copyText('Celalettin Yabuz')">
+        <div class="flex flex-col gap-1 w-full">
+          <span class="text-xs font-medium text-gray-500" data-i18n="receiver_name">Alıcı Adı</span>
+          <div class="flex justify-between items-center w-full">
+            <span class="font-semibold text-[15px]">Celalettin Yabuz</span>
+            <i class="bi bi-files text-xl text-black"></i>
+          </div>
+        </div>
+      </div>
+      <div class="ios-item" onclick="copyText('TR800006100000000001234567')">
+        <div class="flex flex-col gap-1 w-full">
+          <span class="text-xs font-medium text-gray-500">IBAN (TR)</span>
+          <div class="flex justify-between items-center w-full">
+            <span class="font-semibold text-[15px] font-mono">TR80 0006 1000 0000...</span>
+            <i class="bi bi-files text-xl text-black"></i>
+          </div>
+        </div>
+      </div>
+      <div class="ios-item bg-gray-50" onclick="copyText('DW-<%= userId %>')">
+        <div class="flex flex-col gap-1 w-full">
+          <span class="text-xs font-bold text-red-500">Açıklama Kodu (Zorunlu)</span>
+          <div class="flex justify-between items-center w-full">
+            <span class="font-extrabold text-[15px] text-black">DW-<%= userId %></span>
+            <i class="bi bi-files text-xl text-black"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="px-4 text-xs text-gray-500 leading-relaxed pb-8" data-i18n="deposit_desc">
+      Açıklama kodunu havale ekranında eksiksiz yazmanız halinde bakiyeniz 5 dakika içinde onaylanacaktır.
+    </div>
+
+  </div>
+</div>
+
+<!-- ==========================================
+     FLOATING TABBAR
+     ========================================== -->
+<div class="floating-tabbar">
+  <button class="tab-btn active" onclick="switchTab('studio')">
+    <i class="bi bi-house-door-fill"></i>
+    <span data-i18n="studio">Stüdyo</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('design')">
+    <i class="bi bi-magic"></i>
+    <span data-i18n="design_tab">Tasarım</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('orders')">
+    <i class="bi bi-box-seam-fill"></i>
+    <span data-i18n="orders">Sipariş</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('wallet')">
+    <i class="bi bi-wallet-fill"></i>
+    <span data-i18n="balance">Bakiye</span>
+  </button>
+</div>
+
+<!-- KVKK Modal (Bottom Sheet) -->
+<div class="sheet-overlay" id="kvkk-overlay"></div>
+<div class="bottom-sheet" id="kvkk-sheet">
+  <div class="sheet-handle"></div>
+  <h3 class="text-xl font-extrabold mb-3">Veri Güvenliği ve Gizliliği</h3>
+  <div class="text-[13px] text-gray-600 leading-relaxed text-justify mb-6">
+    <p class="mb-2">Kıymetli Kullanıcımız,</p>
+    <p class="mb-2">DreamWork Studio olarak IBAN ve kişisel verileriniz 6698 sayılı KVKK kapsamında yalnızca ödemenizin eşleştirilmesi amacıyla şifreli olarak işlenmektedir.</p>
+    <p>İşlem yaparak koşulları ve rıza beyanını onaylamış olursunuz.</p>
+  </div>
+  <button class="w-full bg-black text-white rounded-xl h-[52px] font-bold text-[16px] active:scale-95 transition-transform" onclick="acceptKvkk()">Okudum, Onaylıyorum</button>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-md z-50 hidden flex-col items-center justify-center">
+  <div class="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin mb-4"></div>
+  <div class="font-bold text-lg" data-i18n="ai_loading">Sistem İnceliyor</div>
+  <div class="text-sm text-gray-500 mt-1">Lütfen bekleyin...</div>
+</div>
+
+<!-- Result Bottom Sheet -->
+<div class="sheet-overlay" id="result-overlay"></div>
+<div class="bottom-sheet" id="result-sheet" style="height: 85vh; overflow-y:auto">
+  <div class="sheet-handle"></div>
+  <div class="text-center mb-6">
+    <div class="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="bi bi-check-lg"></i></div>
+    <h2 class="text-2xl font-extrabold" data-i18n="ai_success">Ölçüler Alındı</h2>
+    <p class="text-sm text-gray-500 mt-1" data-i18n="ai_success_desc">Araç şasisi algılandı. Celal Yabuz süreci devralıyor.</p>
+  </div>
+
+  <div class="ios-list border border-gray-200 mx-0 mb-6">
+    <div class="ios-item">
+      <span class="text-gray-500 font-medium">Araç:</span>
+      <span class="font-bold text-black" id="ai-brand-model">-</span>
+    </div>
+  </div>
+
+  <h3 class="text-sm font-bold text-gray-500 mb-3 ml-1" data-i18n="delivery_title">TESLİMAT / MONTAJ SEÇİN</h3>
+  
+  <div class="bg-white border border-gray-200 rounded-2xl p-4 mb-3 flex items-center gap-4 cursor-pointer ring-2 ring-black" id="opt-gelal" onclick="selectDelivery('gelal')">
+    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xl text-black"><i class="bi bi-shop"></i></div>
+    <div class="flex-1">
+      <div class="font-bold text-[15px]" data-i18n="del_shop">Dükkandan Teslim (GelAl)</div>
+      <div class="text-xs text-gray-500" data-i18n="del_shop_desc">Merkez Stüdyo - Ücretsiz</div>
+    </div>
+    <i class="bi bi-check-circle-fill text-black text-xl check-icon"></i>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-2xl p-4 mb-3 flex items-center gap-4 cursor-pointer" id="opt-kargo" onclick="selectDelivery('kargo')">
+    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xl text-black"><i class="bi bi-truck"></i></div>
+    <div class="flex-1">
+      <div class="font-bold text-[15px]" data-i18n="del_cargo">Adrese Kargo</div>
+      <div class="text-xs text-gray-500" data-i18n="del_cargo_desc">Tüm Türkiye - Ücretsiz</div>
+    </div>
+    <i class="bi bi-circle text-gray-300 text-xl check-icon"></i>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-2xl p-4 mb-6 flex items-center gap-4 cursor-pointer" id="opt-montaj" onclick="selectDelivery('montaj')">
+    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xl text-black"><i class="bi bi-tools"></i></div>
+    <div class="flex-1">
+      <div class="font-bold text-[15px]" data-i18n="del_install">Montaj Dahil Teslim</div>
+      <div class="text-xs text-black font-bold" data-i18n="del_install_desc">Stüdyoda VIP Kurulum</div>
+    </div>
+    <i class="bi bi-circle text-gray-300 text-xl check-icon"></i>
+  </div>
+
+  <button class="w-full bg-black text-white rounded-xl h-[52px] font-bold text-[16px] active:scale-95 transition-transform" onclick="completeOrder()">
+    <span data-i18n="confirm_order_btn">Tasarımı Onayla (Üretime Geç)</span>
+  </button>
+</div>
+
+<!-- Toasts Container -->
+<div id="toast-container"></div>
+
+<script>
+// ==========================
+// TRANSLATION & LOGIC
+// ==========================
+const translations = {
+  tr: {
+    studio: "Stüdyo", balance: "Bakiye", orders: "Siparişler", completed: "Üretilen",
+    celal_designs: "Usta İşi Tasarımlar", celal_desc: "Yapay zeka yalnızca aracınızın ölçülerini çıkarır. Asıl tasarım ustamız Celal Yabuz tarafından tamamen el işçiliği ile üretilir.",
+    popular_kits: "Popüler Body Kit'ler", design_process: "TASARIM SÜRECİ",
+    design_desc: "Özel araç tasarımınızı oluşturmak için sağ alttaki (+) butonuna tıklayın. AI destekli sistemimiz 3 fotoğraf ile süreci hemen başlatacaktır.",
+    status_preparing: "Tasarım Hazırlanıyor", status_received: "Siparişiniz stüdyomuza ulaştı.", order_detail: "SİPARİŞ DETAYI",
+    status_label: "Durum", status_val: "Üretimde", delivery_label: "Teslimat Şekli", timeLeft_label: "Kalan Süre", timeLeft_val: "5 Gün",
+    cancel_btn: "Siparişi İptal Et", no_order_title: "Sipariş Yok", no_order_desc: "Henüz aktif bir tasarım siparişiniz bulunmamaktadır.",
+    total_balance: "TOPLAM BAKİYE", deposit_title: "HAVALE/EFT İLE YÜKLE", receiver_info: "ALICI BİLGİLERİ", receiver_name: "Alıcı Adı",
+    deposit_desc: "Açıklama kodunu havale ekranında eksiksiz yazmanız halinde bakiyeniz 5 dakika içinde sistem tarafından onaylanacaktır.",
+    new_design: "Tasarım", required_pics: "Lütfen en az 3 temel açıyı tamamlayın (Ön, Arka, Yan)", start_order: "Siparişi Başlat", clear: "Temizle",
+    start_design_btn: "Yeni Tasarım Başlat",
+    free_transfer: "Havale Ücretsiz", all_transfers: "Tüm işlemler", copied: "Kopyalandı",
+    ai_success: "Ölçüler Alındı", ai_success_desc: "Araç şasisi algılandı. Celal Yabuz süreci devralıyor.",
+    delivery_title: "TESLİMAT / MONTAJ SEÇİN", del_shop: "Dükkandan Teslim (GelAl)", del_shop_desc: "Merkez Stüdyo - Ücretsiz",
+    del_cargo: "Adrese Kargo", del_cargo_desc: "Tüm Türkiye - Ücretsiz", del_install: "Montaj Dahil Teslim", del_install_desc: "Stüdyoda VIP Kurulum",
+    confirm_order_btn: "Siparişi Onayla", ai_loading: "Sistem İnceliyor", err_balance: ""
+  },
+  en: {
+    studio: "Studio", balance: "Balance", orders: "Orders", completed: "Produced",
+    celal_designs: "Masterclass Designs", celal_desc: "AI only extracts vehicle dimensions. The design is custom-built by master Celal Yabuz.",
+    popular_kits: "Popular Body Kits", design_process: "DESIGN PROCESS",
+    design_desc: "Click (+) to create your custom vehicle design. AI system starts the process with 3 basic photos.",
+    status_preparing: "Preparing Design", status_received: "Your order reached our studio.", order_detail: "ORDER DETAIL",
+    status_label: "Status", status_val: "In Production", delivery_label: "Delivery Method", timeLeft_label: "Time Left", timeLeft_val: "5 Days",
+    cancel_btn: "Cancel Order", no_order_title: "No Orders", no_order_desc: "You don't have any active design orders yet.",
+    total_balance: "TOTAL BALANCE", deposit_title: "DEPOSIT VIA TRANSFER", receiver_info: "RECEIVER INFO", receiver_name: "Receiver Name",
+    deposit_desc: "If you enter the description code completely, your balance will be approved within 5 minutes.",
+    new_design: "Design", required_pics: "Please complete at least 3 angles (Front, Rear, Side)", start_order: "Start Order", clear: "Clear",
+    start_design_btn: "Start New Design",
+    free_transfer: "Free Transfer", all_transfers: "All transfers", copied: "Copied",
+    ai_success: "Dimensions Extracted", ai_success_desc: "Vehicle chassis detected. Master Celal Yabuz is taking over.",
+    delivery_title: "SELECT DELIVERY / INSTALL", del_shop: "Store Pickup", del_shop_desc: "Main Studio - Free",
+    del_cargo: "Cargo Delivery", del_cargo_desc: "Nationwide - Free", del_install: "Delivery + Install", del_install_desc: "VIP Setup at Studio",
+    confirm_order_btn: "Confirm Design (Start Prod.)", ai_loading: "System Scanning", err_balance: "Insufficient balance."
+  },
+  ru: {
+    studio: "Студия", balance: "Баланс", orders: "Заказы", completed: "Сделано",
+    celal_designs: "Мастерские дизайны", celal_desc: "ИИ только извлекает размеры авто. Дизайн создается мастером Джелалом Ябузом вручную.",
+    popular_kits: "Популярные обвесы", design_process: "ПРОЦЕСС ДИЗАЙНА",
+    design_desc: "Нажмите (+), чтобы начать. ИИ начнет процесс с 3 фото.",
+    status_preparing: "Готовится дизайн", status_received: "Ваш заказ в студии.", order_detail: "ДЕТАЛИ ЗАКАЗА",
+    status_label: "Статус", status_val: "В производстве", delivery_label: "Доставка", timeLeft_label: "Осталось", timeLeft_val: "5 Дней",
+    cancel_btn: "Отменить", no_order_title: "Нет заказов", no_order_desc: "У вас пока нет активных заказов.",
+    total_balance: "БАЛАНС", deposit_title: "ПОПОЛНЕНИЕ", receiver_info: "ПОЛУЧАТЕЛЬ", receiver_name: "Имя",
+    deposit_desc: "Введите код описания, и баланс будет подтвержден в течение 5 минут.",
+    new_design: "Дизайн", required_pics: "Завершите минимум 3 ракурса", start_order: "Начать заказ", clear: "Очистить",
+    start_design_btn: "Новый дизайн",
+    free_transfer: "Бесплатный перевод", all_transfers: "Все переводы", copied: "Скопировано",
+    ai_success: "Размеры получены", ai_success_desc: "Шасси обнаружено. Мастер Джелал начинает работу.",
+    delivery_title: "ДОСТАВКА / УСТАНОВКА", del_shop: "Самовывоз", del_shop_desc: "Студия - Бесплатно",
+    del_cargo: "Доставка", del_cargo_desc: "По стране - Бесплатно", del_install: "Установка", del_install_desc: "VIP установка",
+    confirm_order_btn: "Подтвердить дизайн", ai_loading: "Сканирование", err_balance: "Недостаточно средств."
+  }
+};
+
+let currentLanguage = 'tr';
+
+function translatePage(lang) {
+  const elements = document.querySelectorAll('[data-i18n]');
+  elements.forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(translations[lang][key]) el.textContent = translations[lang][key];
+  });
+}
+
+function setLang(code, flagCode) {
+  currentLanguage = code;
+  document.getElementById('flag-icon').src = `https://hatscripts.github.io/circle-flags/flags/${flagCode}.svg`;
+  document.querySelectorAll('.lang-item').forEach(el => el.classList.remove('selected', 'font-bold'));
+  event.currentTarget.classList.add('selected', 'font-bold');
+  document.getElementById('lang-menu').classList.remove('show');
+  translatePage(code);
+}
+
+function toggleLang() {
+  document.getElementById('lang-menu').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  const m = document.getElementById('lang-menu');
+  if (m.classList.contains('show') && !e.target.closest('.lang-bubble')) {
+    m.classList.remove('show');
+  }
+});
+
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'custom-toast';
+  toast.innerText = msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast(translations[currentLanguage].copied || 'Kopyalandı'));
+}
+
+// TAB SWITCHER
+function switchTab(tabId) {
+  // Check KVKK for Wallet
+  if (tabId === 'wallet') {
+    if (!localStorage.getItem('dw_kvkk_accepted')) {
+      document.getElementById('kvkk-overlay').classList.add('show');
+      document.getElementById('kvkk-sheet').classList.add('open');
+      return; // Stop switching
+    }
+  }
+
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  
+  // Yalnızca ana sayfa kapsayıcısının dikey (vertical) scroll'unu yavaşça başa al, 
+  // yatay slider (h-slider vb.) öğelerine müdahale etme.
+  const mainScroll = document.getElementById('main-scroll');
+  if (mainScroll) {
+    mainScroll.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }
+}
+
+// KVKK Logic
+function acceptKvkk() {
+  localStorage.setItem('dw_kvkk_accepted', 'true');
+  document.getElementById('kvkk-overlay').classList.remove('show');
+  document.getElementById('kvkk-sheet').classList.remove('open');
+  // Auto switch to wallet after accept
+  document.querySelector('.tab-btn:nth-child(4)').click();
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+  const waitlist = localStorage.getItem('dw_waitlist');
+  if (waitlist) {
+    const data = JSON.parse(waitlist);
+    const orderStat = document.getElementById('stat-orders');
+    if(orderStat) orderStat.textContent = '1';
+    
+    document.getElementById('no-order-container').classList.add('hidden');
+    document.getElementById('waitlist-container').classList.remove('hidden');
+    
+    let delText = 'GelAl Noktası';
+    if(data.deliveryType === 'kargo') delText = 'Adrese Kargo';
+    if(data.deliveryType === 'montaj') delText = 'Stüdyoda Montaj';
+    document.getElementById('saved-delivery-type').textContent = delText;
+  }
+
+  // Session Check
+  <% if (Object.keys(session.images || {}).length > 0 && !session.completed) { %>
+    document.querySelector('.tab-btn:nth-child(2)').click(); // Go to Design Tab
+  <% } %>
+});
+
+function cancelOrder() {
+  localStorage.removeItem('dw_waitlist');
+  window.location.reload();
+}
+
+// UPLOAD & ANALYSIS
+const bakiye = <%= credits %>;
+
+function triggerUpload(posKey) { document.getElementById('file-' + posKey).click(); }
+function handleUpload(posKey, input) {
+  if (!input.files || !input.files[0]) return;
+  const formData = new FormData();
+  formData.append('image', input.files[0]);
+
+  fetch('/analyze/upload/' + posKey, { method: 'POST', body: formData })
+  .then(r => r.json()).then(data => {
+    if (data.success) window.location.reload();
+  });
+}
+
+function resetDesign() {
+  fetch('/analyze/reset', { headers: { 'Accept': 'application/json' } }).then(() => {
+    window.location.reload();
+  });
+}
+
+function confirmOrder() {
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  document.getElementById('loading-overlay').classList.add('flex');
+  {
+    
+    fetch('/analyze/run', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('loading-overlay').classList.add('hidden');
+      document.getElementById('loading-overlay').classList.remove('flex');
+      
+      if (data.success) {
+        document.getElementById('result-overlay').classList.add('show');
+        document.getElementById('result-sheet').classList.add('open');
+        document.getElementById('ai-brand-model').textContent = `${data.result.marka || '-'} ${data.result.model || ''}`;
+      } else {
+        showToast(data.error || 'Analiz başarısız');
+      }
+    })
+    .catch(err => {
+      document.getElementById('loading-overlay').classList.add('hidden');
+      document.getElementById('loading-overlay').classList.remove('flex');
+      showToast('Bağlantı hatası: ' + err.message);
+    });
+  }
+}
+
+// Result Sheet Selection
+let selectedDelivery = 'gelal';
+function selectDelivery(type) {
+  selectedDelivery = type;
+  
+  // Reset all
+  const opts = ['gelal', 'kargo', 'montaj'];
+  opts.forEach(o => {
+    const el = document.getElementById('opt-' + o);
+    el.classList.remove('ring-2', 'ring-black');
+    el.querySelector('.check-icon').className = 'bi bi-circle text-gray-300 text-xl check-icon';
+  });
+
+  // Select target
+  const target = document.getElementById('opt-' + type);
+  target.classList.add('ring-2', 'ring-black');
+  target.querySelector('.check-icon').className = 'bi bi-check-circle-fill text-black text-xl check-icon';
+}
+
+function completeOrder() {
+  localStorage.setItem('dw_waitlist', JSON.stringify({
+    date: new Date().toISOString(),
+    deliveryType: selectedDelivery,
+    status: 'waiting'
+  }));
+  // Sonuç sheet'ini kapat
+  document.getElementById('result-overlay').classList.remove('show');
+  document.getElementById('result-sheet').classList.remove('open');
+  // Siparişler sekmesine geç
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-orders').classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+  // Sipariş durumunu güncelle
+  document.getElementById('no-order-container').classList.add('hidden');
+  document.getElementById('waitlist-container').classList.remove('hidden');
+  let delText = 'GelAl Noktası';
+  if(selectedDelivery === 'kargo') delText = 'Adrese Kargo';
+  if(selectedDelivery === 'montaj') delText = 'Stüdyoda Montaj';
+  document.getElementById('saved-delivery-type').textContent = delText;
+  showToast('Siparişiniz alındı. En kısa sürede size geri dönüş yapacağız.');
+}
+</script>
+
+<%- include('partials/footer') %>

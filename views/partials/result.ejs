@@ -1,0 +1,50 @@
+<div class="card-dev mb-4">
+  <div class="card-dev-header d-flex justify-content-between align-items-center">
+    <span>OUTPUT_PAYLOAD</span>
+    <span class="text-success font-mono small">STATUS: 200 OK</span>
+  </div>
+
+  <!-- Raw JSON View (Developer style) -->
+  <div class="p-0 border-bottom">
+    <div class="result-json-view">
+{
+  <span class="json-key">"marka"</span>: <span class="json-string">"<%= result.marka || '-' %>"</span>,
+  <span class="json-key">"model"</span>: <span class="json-string">"<%= result.model || '-' %>"</span>,
+  <span class="json-key">"yil"</span>: <span class="json-number"><%= result.yil || 'null' %></span>,
+  <span class="json-key">"renk"</span>: <span class="json-string">"<%= result.renk || '-' %>"</span>,
+  <span class="json-key">"govde_tipi"</span>: <span class="json-string">"<%= result.govde_tipi || '-' %>"</span>,
+  <span class="json-key">"guven_skoru"</span>: <span class="json-number"><%= result.guven_skoru || 0 %></span>,
+  <span class="json-key">"hasar_tespiti"</span>: <span class="json-string">"<%= result.hasar_tespiti || '-' %>"</span>,
+  <span class="json-key">"genel_durum"</span>: <span class="json-string">"<%= result.genel_durum || '-' %>"</span>,
+  <span class="json-key">"ozellikler"</span>: [
+    <% if (result.ozellikler && result.ozellikler.length) { %>
+      <% result.ozellikler.forEach((f, i) => { %>
+        <span class="json-string">"<%= f %>"</span><%= i < result.ozellikler.length - 1 ? ',' : '' %>
+      <% }); %>
+    <% } %>
+  ]
+}
+    </div>
+  </div>
+
+  <!-- Formatted Data View -->
+  <div class="p-0 bg-white">
+    <div class="key-val-row px-3">
+      <div class="kv-key">Confidence</div>
+      <div class="kv-val">
+        <div class="d-flex align-items-center gap-2">
+          <div class="progress flex-grow-1" style="height: 6px; border-radius: 0;">
+            <div class="progress-bar bg-success" style="width: <%= result.guven_skoru || 0 %>%"></div>
+          </div>
+          <span class="font-mono small text-success"><%= result.guven_skoru || 0 %>%</span>
+        </div>
+      </div>
+    </div>
+    <% if (result.aciklama) { %>
+    <div class="p-3 bg-light font-mono" style="font-size: 12px; border-top: 1px solid var(--border); line-height: 1.5;">
+      <span class="text-secondary">// Model Description</span><br>
+      <%= result.aciklama %>
+    </div>
+    <% } %>
+  </div>
+</div>

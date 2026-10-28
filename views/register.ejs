@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <title><%= title %> | DreamWork Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @font-face { font-family: 'SF Pro Display'; font-weight: 400; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff') format('woff'); }
+    @font-face { font-family: 'SF Pro Display'; font-weight: 600; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-semibold-webfont.woff') format('woff'); }
+    @font-face { font-family: 'SF Pro Display'; font-weight: 800; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-heavy-webfont.woff') format('woff'); }
+    body { font-family: 'SF Pro Display', sans-serif; background-color: #000; color: #fff; }
+    .glass-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body class="antialiased flex items-center justify-center min-h-screen p-4">
+  <div class="w-full max-w-sm glass-box rounded-3xl p-8 relative overflow-hidden">
+    <div class="absolute -top-20 -right-20 w-40 h-40 bg-white/10 blur-3xl rounded-full"></div>
+    
+    <div class="relative z-10 text-center mb-8">
+      <h1 class="text-2xl font-extrabold tracking-tight">Kayıt Ol</h1>
+      <p class="text-white/50 text-sm mt-1">Stüdyo'ya katılın ve tasarımınızı yaratın</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/auth/register" method="POST" class="relative z-10 flex flex-col gap-4">
+      <div>
+        <label class="text-xs font-semibold text-white/50 ml-1 mb-1 block uppercase tracking-wider">Ad Soyad</label>
+        <input type="text" name="name" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors" placeholder="Celal Yabuz">
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-white/50 ml-1 mb-1 block uppercase tracking-wider">E-Posta</label>
+        <input type="email" name="email" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors" placeholder="ornek@mail.com">
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-white/50 ml-1 mb-1 block uppercase tracking-wider">Şifre</label>
+        <input type="password" name="password" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors" placeholder="••••••••">
+      </div>
+      <button type="submit" class="w-full bg-white text-black font-bold rounded-xl py-3.5 mt-2 active:scale-95 transition-transform">Hesap Oluştur</button>
+    </form>
+
+    <div class="mt-6 text-center relative z-10">
+      <p class="text-white/40 text-sm">Zaten hesabınız var mı? <a href="/auth/login" class="text-white font-bold hover:underline">Giriş Yap</a></p>
+    </div>
+  </div>
+</body>
+</html>

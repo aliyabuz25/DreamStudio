@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <title>DreamWork Studio</title>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚘</text></svg>">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Bootstrap Icons (Minimal kullanım için) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Custom Apple Fonts & Config -->
+  <style>
+    @font-face { font-family: 'SF Pro Display'; font-weight: 400; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff') format('woff'); }
+    @font-face { font-family: 'SF Pro Display'; font-weight: 500; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-medium-webfont.woff') format('woff'); }
+    @font-face { font-family: 'SF Pro Display'; font-weight: 600; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-semibold-webfont.woff') format('woff'); }
+    @font-face { font-family: 'SF Pro Display'; font-weight: 700; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-bold-webfont.woff') format('woff'); }
+    @font-face { font-family: 'SF Pro Display'; font-weight: 800; src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-heavy-webfont.woff') format('woff'); }
+    
+    html { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'SF Pro Display', sans-serif; background-color: #f2f2f7; color: #000; overflow-x: hidden; }
+  </style>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#000000',
+            surface: '#ffffff',
+            iosbg: '#f2f2f7',
+            iosborder: '#c6c6c8',
+            iosblue: '#007aff',
+            iosgreen: '#34c759'
+          },
+          boxShadow: {
+            'soft': '0 4px 20px rgba(0,0,0,0.04)',
+            'float': '0 12px 32px rgba(0,0,0,0.1)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="antialiased selection:bg-iosblue selection:text-white">
+  <!-- SafeArea Padding Container -->
+  <div class="flex flex-col h-screen w-full max-w-[600px] mx-auto relative bg-iosbg overflow-hidden shadow-2xl">

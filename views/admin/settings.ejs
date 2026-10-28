@@ -1,0 +1,80 @@
+<%- include('partials/header') %>
+
+<div class="row">
+  <!-- WhatsApp Connection Panel -->
+  <div class="col-md-6">
+    <div class="card card-outline card-success">
+      <div class="card-header">
+        <h3 class="card-title">Baileys (WhatsApp) Bağlantısı</h3>
+      </div>
+      <div class="card-body text-center">
+        <h5 id="wa-status" class="mb-3">Bağlantı Durumu: Yükleniyor...</h5>
+        
+        <div id="qr-container" style="display:none;" class="mb-3">
+          <p class="text-muted small">WhatsApp'ı açıp bağlı cihazlar menüsünden okutun.</p>
+          <img id="wa-qr" src="" alt="WhatsApp QR" style="max-width: 250px; border: 1px solid #ddd; padding: 10px; border-radius: 10px;">
+        </div>
+
+        <button id="btn-connect" class="btn btn-primary mt-2"><i class="fas fa-qrcode"></i> Yeni Bağlantı / QR Başlat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Send Panel -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Test Mesajı Gönder</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Telefon Numarası (Ülke kodu ile, örn: 905321234567)</label>
+          <input type="text" id="wa-phone" class="form-control" placeholder="905xxxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label>Mesaj</label>
+          <textarea id="wa-message" class="form-control" rows="3" placeholder="Sistem başarıyla bağlandı."></textarea>
+        </div>
+        <button id="btn-send" class="btn btn-success"><i class="fas fa-paper-plane"></i> Gönder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    function fetchWaStatus() {
+      $.get('/wa/status', function(data) {
+        $('#wa-status').text('Durum: ' + data.status);
+        if (data.qr) {
+          $('#qr-container').show();
+          $('#wa-qr').attr('src', data.qr);
+        } else {
+          $('#qr-container').hide();
+        }
+      });
+    }
+
+    setInterval(fetchWaStatus, 3000);
+    fetchWaStatus();
+
+    $('#btn-connect').click(function() {
+      $.post('/wa/connect', function(res) {
+        if(res.success) fetchWaStatus();
+      });
+    });
+
+    $('#btn-send').click(function() {
+      const phone = $('#wa-phone').val();
+      const message = $('#wa-message').val();
+      if(!phone || !message) return alert("Numara ve mesaj girin.");
+      
+      $.post('/wa/send', { phone, message }, function(res) {
+        if(res.success) alert("Mesaj gönderildi!");
+        else alert("Hata: " + res.error);
+      });
+    });
+  });
+</script>
+
+<%- include('partials/footer') %>

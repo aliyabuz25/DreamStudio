@@ -1,0 +1,135 @@
+/* =============================================
+   DreamWork Studio - Custom Tailwind UI 
+   Zero Library, 100% Native Feel
+   ============================================= */
+
+/* Sayfa Kaydırma Alanı */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 120px; /* Tabbar boşluğu */
+  padding-left: 12px;
+  padding-right: 12px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Sekmelerin Gizlenmesi */
+.tab-content { display: none; opacity: 0; transition: opacity 0.2s ease-in-out; }
+.tab-content.active { display: block; opacity: 1; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Floating Tabbar */
+.floating-tabbar {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  height: 64px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 32px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 50;
+  padding: 0 8px;
+  border: 1px solid rgba(255,255,255,0.4);
+}
+.tab-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1; color: #8e8e93; transition: all 0.2s; border: none; background: none;
+}
+.tab-btn i { font-size: 22px; margin-bottom: 2px; transition: transform 0.2s cubic-bezier(0.3, 2, 0.4, 1); }
+.tab-btn span { font-size: 10px; font-weight: 600; }
+.tab-btn.active { color: var(--brand, #000); }
+.tab-btn.active i { transform: translateY(-3px) scale(1.1); color: var(--brand, #000); }
+
+/* Language Floating Bubble */
+.lang-bubble {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  right: 16px;
+  width: 40px; height: 40px; border-radius: 20px;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 40; transition: transform 0.2s;
+  overflow: hidden; border: 1px solid rgba(0,0,0,0.05);
+}
+.lang-bubble:active { transform: scale(0.9); }
+.lang-bubble img { width: 100%; height: 100%; object-fit: cover; }
+
+.lang-menu {
+  position: absolute; top: calc(64px + env(safe-area-inset-top)); right: 16px;
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+  border-radius: 16px; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  display: flex; flex-direction: column; gap: 4px; min-width: 140px; z-index: 100;
+  opacity: 0; pointer-events: none; transform: translateY(-10px); transition: all 0.2s;
+}
+.lang-menu.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.lang-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s;
+}
+.lang-item:active { background: #f2f2f7; }
+.lang-item.selected { background: rgba(0,0,0,0.05); font-weight: 700; }
+
+/* Custom iOS List */
+.ios-list { background: #fff; border-radius: 16px; overflow: hidden; margin: 0 16px; }
+.ios-list-header { font-size: 12px; font-weight: 600; color: #8e8e93; text-transform: uppercase; margin: 24px 16px 6px; letter-spacing: 0.5px; }
+.ios-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+  position: relative; cursor: pointer; background: #fff; transition: background 0.15s;
+}
+.ios-item:active { background: #e5e5ea; }
+.ios-item:not(:last-child)::after {
+  content: ''; position: absolute; bottom: 0; left: 16px; right: 0; height: 1px; background: #f2f2f7;
+}
+
+/* Upload Grid */
+.upload-card {
+  background: #fff; border-radius: 16px; border: 1px solid #f2f2f7; aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; cursor: pointer; transition: transform 0.1s;
+}
+.upload-card:active { transform: scale(0.97); }
+.upload-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.upload-check {
+  position: absolute; top: 8px; right: 8px; width: 24px; height: 24px;
+  background: rgba(255,255,255,0.9); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; color: #34c759; font-size: 16px;
+}
+
+/* Modals & Bottom Sheets */
+.sheet-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none;
+  transition: opacity 0.3s; z-index: 100;
+}
+.sheet-overlay.show { opacity: 1; pointer-events: auto; }
+
+.bottom-sheet {
+  position: absolute; bottom: -100%; left: 0; right: 0; background: #fff;
+  border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 101;
+  padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  transition: bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+}
+.bottom-sheet.open { bottom: 0; }
+.sheet-handle { width: 40px; height: 5px; background: #e5e5ea; border-radius: 3px; margin: 0 auto 20px; }
+
+/* Horizontal Slider */
+.h-slider { display: flex; gap: 12px; overflow-x: auto; padding: 4px 16px 20px; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.h-slider::-webkit-scrollbar { display: none; }
+.h-card { min-width: 260px; scroll-snap-align: start; }
+
+/* Custom Toasts */
+#toast-container { position: absolute; top: env(safe-area-inset-top); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 200; gap: 8px; padding-top: 16px; }
+.custom-toast { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); color: #fff; padding: 12px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; animation: slideDown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }

@@ -1,0 +1,41 @@
+<%- include('partials/header') %>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Ad Soyad</th>
+          <th>User No</th>
+          <th>E-posta</th>
+          <th>Mevcut Bakiye</th>
+          <th>Bakiye Yükle</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(u => { %>
+          <tr>
+            <td><%= u.id %></td>
+            <td><%= u.name %></td>
+            <td><strong>DW-<%= u.userNo %></strong></td>
+            <td><%= u.email %></td>
+            <td><strong class="text-success"><%= u.credits %> ₺</strong></td>
+            <td>
+              <form action="/admin/users/<%= u.id %>/credits" method="POST" class="form-inline">
+                <div class="input-group input-group-sm">
+                  <input type="number" name="credits" class="form-control" placeholder="Tutar (₺)" required>
+                  <span class="input-group-append">
+                    <button type="submit" class="btn btn-primary btn-flat">Ekle</button>
+                  </span>
+                </div>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
